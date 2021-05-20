@@ -2,7 +2,7 @@
 ## Sidra Sohail 
 ## Project - DADA2 Analysis of Microbial Datasets
 ### Background
-### Packages and software to install prior to analyzing
+### Packages and software to install prior to analysis
 ### Files in repo
 ### How to use
 Clone repository into personal directory using this command,  

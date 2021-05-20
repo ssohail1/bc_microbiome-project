@@ -1,6 +1,6 @@
 # bc_microbiome-project
 ## Sidra Sohail 
-## Project - DADA2 Analysis of Microbial Datasets
+## Project - Analysis of Microbial Datasets
 ### Background
 ### Packages and software to install prior to analysis
 ### Files in repo

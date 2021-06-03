@@ -1,6 +1,6 @@
 # bc_microbiome-project
 ## Sidra Sohail 
-## Project - Analysis of Microbial Datasets
+## Project - Analysis of Breast Cancer Microbial Datasets
 ### Background
 ### Packages and software to install prior to analysis
 ### Files in repo

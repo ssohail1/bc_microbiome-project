@@ -4,6 +4,8 @@ library(dplyr)
 library(ggplot2)
 library(microshades)
 
+ps_top100kdat_ <- merge_samples(ps.top100kdat, "final_dx") # final_dx from metadata
+
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
 ps_100_prepkdat_ <- prep_mdf(ps_top100kdat_)
 
@@ -100,8 +102,6 @@ taxa.printkdat <- taxasilvakdat
 rownames(taxa.printkdat) <- NULL
 head(taxa.printkdat)
 
-
-## taxa <- addSpecies(taxa, "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/silva_species_assignment_v138.fa")
 
 # Did not evaluate accuracy with mock data as no mock samples in our data
 

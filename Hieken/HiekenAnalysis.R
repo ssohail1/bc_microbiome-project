@@ -15,9 +15,9 @@ color_ps_100kdat_ <- create_color_dfs(ps_100_prepkdat_, group_level = "Phylum", 
 mdf_ps_kdat <- color_ps_100kdat_$mdf
 cdf_ps_kdat <- color_ps_100kdat_$cdf
 
-plot_1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
+plot__1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
 
-plot_1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+plot__1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
   theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
   theme(axis.text.x = element_text(size= 14))
 

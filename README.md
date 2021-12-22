@@ -10,6 +10,16 @@ Chan et al. PRJNA314877
 #### Packages and software to install before running
 R: Bioconductor, dada2, phyloseq, Biostrings, ggplot2, DECIPHER, phangorn, hopach
 ### Files in repo
+- Chan folder:
+  - ChanRscript_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - graphs: proportional abundance plots from phyloseq and MicrobiomeAnalyst
+- Hieken folder:
+  - HiekenAnalysis_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - graphs: proportional abundance plots from phyloseq and MicrobiomeAnalyst
+- Urbaniak folder:
+  - UrbaniakAnalysis_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - graphs: proportional abundance plots from phyloseq
+
 ### How to use
 Clone repository into personal directory using this command,  
 `git clone https://github.com/ssohail1/bc_microbiome-project.git`

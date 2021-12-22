@@ -1,4 +1,3 @@
-### Update 09152021
 # install.packages("remotes")
 library(remotes)
 # remotes::install_github("KarstensLab/microshades")

@@ -9,8 +9,10 @@ library(dplyr)
 library(ggplot2)
 library(microshades)
 
+ps_top100udat <- merge_samples(ps.top100udat, "Sample_Type") # Sample_Type from metadata
+
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
-ps100_prepudat <- prep_mdf(ps.top100udat)
+ps100_prepudat <- prep_mdf(ps_top100udat)
 
 # Create a color object for the specified data
 color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))

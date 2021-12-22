@@ -1,10 +1,9 @@
-### Updated October 8 2021
 library(phyloseq)
 library(dplyr)
 library(ggplot2)
 library(microshades)
 
-ps_top100_cdat <- merge_samples(ps.top100cdat, "Sample_Type") # Sample_Type from metadata
+ps_top100_cdat <- merge_samples(ps.top100cdat, "health_state") # health_state from metadata
 
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
 ps_100_prepcdat <- prep_mdf(ps_top100_cdat)
@@ -174,8 +173,8 @@ braynmdscdat <- plot_ordination(ps.propcdat, ord.nmds.braycdat, color="health_st
 top100cdat <- names(sort(taxa_sums(pscdat), decreasing=TRUE))[1:100]
 ps.top100cdat <- transform_sample_counts(pscdat, function(OTU) OTU/sum(OTU))
 ps.top100cdat <- prune_taxa(top100cdat, ps.top100cdat)
-plot_bar(ps.top100cdat, x = "Sample_Type", fill = "Family") + facet_wrap(~Isolation_source, scales = "free_x")
-plot_bar(ps.top100cdat, x = "Sample_Type", fill = "Phylum") + facet_wrap(~Isolation_source, scales = "free_x")
+plot_bar(ps.top100cdat, x = "health_state", fill = "Family") + facet_wrap(~Isolate, scales = "free_x")
+plot_bar(ps.top100cdat, x = "health_state", fill = "Phylum") + facet_wrap(~Isolate, scales = "free_x")
 
 
 # *** Proportional Abundance Code ***
@@ -193,7 +192,7 @@ pscdat
 
 ## pscdat file = all sequences
 ps.propcdat <- transform_sample_counts(pscdat, function(otu) otu/sum(otu))
-ord.nmds.braycdat <- ordinate(ps.propcdat, method="NMDS", distance="bray", color="Sample_Type")
+ord.nmds.braycdat <- ordinate(ps.propcdat, method="NMDS", distance="bray", color="health_state")
 top100cdat <- names(sort(taxa_sums(pscdat), decreasing=TRUE))[1:100]
 ps.top100cdat <- transform_sample_counts(pscdat, function(OTU) OTU/sum(OTU))
 ps.top100cdat <- prune_taxa(top100cdat, ps.top100cdat)
@@ -202,7 +201,7 @@ ps.top100cdat <- prune_taxa(top100cdat, ps.top100cdat)
 ## Phylum Level
 pscdatp <- tax_glom(ps.top100cdat, "Phylum")
 ps0cdatp <- transform_sample_counts(pscdatp, function(x) x / sum(x))
-ps1cdatp <- merge_samples(ps0cdatp, "Sample_Type")
+ps1cdatp <- merge_samples(ps0cdatp, "health_state")
 ps2cdatp <- transform_sample_counts(ps1cdatp, function(x) x / sum(x))
 pcdatp <- plot_bar(ps2cdatp, fill="Phylum")
 #plot_bar(ps2cdatp, fill="Phylum")
@@ -211,16 +210,16 @@ finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 14), legend.t
 ## Family Level
 pscdatf <- tax_glom(ps.top100cdat, "Family")
 ps0cdatf <- transform_sample_counts(pscdatf, function(x) x / sum(x))
-ps1cdatf <- merge_samples(ps0cdatf, "Sample_Type")
+ps1cdatf <- merge_samples(ps0cdatf, "health_state")
 ps2cdatf <- transform_sample_counts(ps1cdatf, function(x) x / sum(x))
 pcdatf <- plot_bar(ps2cdatf, fill="Family")
 finalplotcdatf <- pcdatf + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))
-#plot_bar(ps2urbggsf, x = "Family", fill = "Sample_Type") + facet_wrap(~Abundance, scales = "free_x")
+#plot_bar(ps2urbggsf, x = "Family", fill = "health_state") + facet_wrap(~Abundance, scales = "free_x")
 
 ## Genus Level
 pscdatg <- tax_glom(ps.top100cdat, "Genus")
 ps0cdatg <- transform_sample_counts(pscdatg, function(x) x / sum(x))
-ps1cdatg <- merge_samples(ps0cdatg, "Sample_Type")
+ps1cdatg <- merge_samples(ps0cdatg, "health_state")
 ps2cdatg <- transform_sample_counts(ps1cdatg, function(x) x / sum(x))
 pcdatg <- plot_bar(ps2cdatg, fill="Genus")
 finalplotcdatg <- pcdatg + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))

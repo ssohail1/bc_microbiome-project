@@ -11,13 +11,13 @@ Chan et al. PRJNA314877
 R: Bioconductor, dada2, phyloseq, Biostrings, ggplot2, DECIPHER, phangorn, hopach
 ### Files in repo
 - Chan folder:
-  - ChanRscript_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - ChanRscript_upd.R: R script for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
   - graphs: proportional abundance plots from phyloseq and MicrobiomeAnalyst
 - Hieken folder:
-  - HiekenAnalysis_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - HiekenAnalysis_upd.R: R script for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
   - graphs: proportional abundance plots from phyloseq and MicrobiomeAnalyst
 - Urbaniak folder:
-  - UrbaniakAnalysis_upd.R: Rscript for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
+  - UrbaniakAnalysis_upd.R: R script for [DADA2](https://benjjneb.github.io/dada2/tutorial.html) and phylogenetic analysis
   - graphs: proportional abundance plots from phyloseq
 
 ### How to use

@@ -1,11 +1,29 @@
+# Updated 09182021
 library(phyloseq)
 library(dplyr)
 library(ggplot2)
 library(microshades)
 
-ps_top100kdat_ <- merge_samples(ps.top100kdat, "final_dx") # final_dx from metadata
-
+pstop100kdat2 <- merge_samples(ps.top100kdat, "env_biome") # looking at tissues
+pstop100kdat2 <- merge_samples(ps.top100kdat, "final_dx") # looking at benign vs malignant
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps_100_prepkdat_2 <- prep_mdf(pstop100kdat2)
+
+# Create a color object for the specified data
+color_ps_100kdat_2 <- create_color_dfs(ps_100_prepkdat_2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_kdat2 <- color_ps_100kdat_2$mdf
+cdf_ps_kdat2 <- color_ps_100kdat_2$cdf
+
+plot_1_k2 <- plot_microshades(mdf_ps_kdat2, cdf_ps_kdat2, group_label = "Phylum Genus")
+
+plot_1_k2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 14))
+
+
 ps_100_prepkdat_ <- prep_mdf(ps_top100kdat_)
 
 # Create a color object for the specified data
@@ -16,12 +34,11 @@ color_ps_100kdat_ <- create_color_dfs(ps_100_prepkdat_, group_level = "Phylum", 
 mdf_ps_kdat <- color_ps_100kdat_$mdf
 cdf_ps_kdat <- color_ps_100kdat_$cdf
 
-plot__1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
+plot_1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
 
-plot__1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+plot_1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
   theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
   theme(axis.text.x = element_text(size= 14))
-
 
 
 # Set the working directory
@@ -102,6 +119,8 @@ rownames(taxa.printkdat) <- NULL
 head(taxa.printkdat)
 
 
+## taxa <- addSpecies(taxa, "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/silva_species_assignment_v138.fa")
+
 # Did not evaluate accuracy with mock data as no mock samples in our data
 
 # Phyloseq
@@ -162,7 +181,7 @@ pskdat <- merge_phyloseq(pskdat, dnakdat)
 taxa_names(pskdat) <- paste0("ASV", seq(ntaxa(pskdat)))
 pskdat
 ps.propkdat <- transform_sample_counts(pskdat, function(otu) otu/sum(otu))
-ord.nmds.braykdat <- ordinate(ps.propkdat, method="NMDS", distance="bray", color="env_biome")
+ord.nmds.braykdat <- ordinate(ps.propkdat, method="NMDS", distance="bray", color="final_dx")
 top100kdat <- names(sort(taxa_sums(pskdat), decreasing=TRUE))[1:100]
 ps.top100kdat <- transform_sample_counts(pskdat, function(OTU) OTU/sum(OTU))
 ps.top100kdat <- prune_taxa(top100kdat, ps.top100kdat)
@@ -173,7 +192,7 @@ ps1kdatp <- merge_samples(ps0kdatp, "final_dx")
 ps2kdatp <- transform_sample_counts(ps1kdatp, function(x) x / sum(x))
 pkdatp <- plot_bar(ps2kdatp, fill="Phylum")
 #point_measkdatp <- pkdatp + geom_point(size = 3)
-finalplotkdatp <- pkdatp + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))
+finalplotkdatp <- pkdatp + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
 
 
 pskdatf <- tax_glom(ps.top100kdat, "Family")
@@ -216,4 +235,3 @@ dmkdat <- dist.ml(phang.alignkdat)
 UPGMAtreekdat <- upgma(dmkdat)
 write.tree(UPGMAtreekdat, file = "/media/mbb/Sidras_Projects/Hieken_paper/VersionControl_DadaCommandRevisions/Dada_commandversions/20210918_version/upgmahieken.nwk", append = FALSE,
            digits = 10, tree.names = FALSE)
-

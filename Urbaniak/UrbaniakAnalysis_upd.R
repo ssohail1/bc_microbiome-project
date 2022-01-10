@@ -1,3 +1,4 @@
+### Update 09152021
 # install.packages("remotes")
 library(remotes)
 # remotes::install_github("KarstensLab/microshades")
@@ -8,10 +9,9 @@ library(dplyr)
 library(ggplot2)
 library(microshades)
 
-ps_top100udat <- merge_samples(ps.top100udat, "Sample_Type") # Sample_Type from metadata
-
+ps_top100_udat <- merge_samples(ps.top100udat, "Type")
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
-ps100_prepudat <- prep_mdf(ps_top100udat)
+ps100_prepudat <- prep_mdf(ps_top100_udat)
 
 # Create a color object for the specified data
 color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
@@ -21,11 +21,11 @@ color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subg
 mdf_psudat <- color_ps100udat$mdf
 cdf_psudat <- color_ps100udat$cdf
 
-plot__1_urb <- plot_microshades(mdf_psudat, cdf_psudat, group_label = "Phylum Genus")
+plot_1 <- plot_microshades(mdf_psudat, cdf_psudat, group_label = "Phylum Genus")
 
-plot__1_urb + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+plot_1 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
   theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=15)) +
-  theme(axis.text.x = element_text(size= 6)) 
+  theme(axis.text.x = element_text(size= 10)) 
 
 
 
@@ -67,10 +67,14 @@ plotErrors(errFudat, nominalQ=TRUE)
 # Applying the core sample inference algorithm to the filtered and trimmed sequence data.
 dadaFsudat <- dada(filtFsudat, err=errFudat, multithread=TRUE)
 dadaFsudat[[1]]
+# dada-class: object describing DADA2 denoising results
+# 317 sequence variants were inferred from 3312 input unique sequences.
+# Key parameters: OMEGA_A = 1e-40, OMEGA_C = 1e-40, BAND_SIZE = 16
 
 # Constructing sequence table
 seqtabudat <- makeSequenceTable(dadaFsudat)
 dim(seqtabudat)
+# 68 7021
 
 table(nchar(getSequences(seqtabudat)))
 
@@ -79,9 +83,11 @@ table(nchar(getSequences(seqtabudat)))
 
 # Remove chimeras
 seqtab.nochimudat <- removeBimeraDenovo(seqtabudat, method="consensus", multithread=TRUE, verbose=TRUE)
-#Get lesser bimeras by increasing minFoldParentOverAbundance
-
+# Get lesser bimeras by increasing minFoldParentOverAbundance
+# Identified 78 bimeras out of 7021 input sequences.
+write.table(seqtab.nochimudat,file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20211112_version/UrbASVfile.txt")
 sum(seqtab.nochimudat)/sum(seqtabudat)
+# 0.9938704
 rowSums(seqtab.nochimudat)
 rowSums(seqtabudat)
 
@@ -100,7 +106,7 @@ head(trackudat)
 # Assign Taxonomy
 taxasilvaudat <- assignTaxonomy(seqtab.nochimudat, "/media/mbb/Sidras_Projects/testfolderurbaniak/silva_nr99_v138.1_train_set.fa", multithread=TRUE)
 ## Went through!
-write.table(taxasilvaudat, file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20210724_version/Urbtaxafile.txt")
+write.table(taxasilvaudat, file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20211112_version/Urbtaxafile.txt")
 taxa.printudat <- taxasilvaudat
 rownames(taxa.printudat) <- NULL
 head(taxa.printudat)
@@ -163,23 +169,23 @@ ps.top100udat <- prune_taxa(top100udat, ps.top100udat)
 plot_bar(ps.top100udat, x = "Sample_Type", fill = "Family") + facet_wrap(~Isolation_source, scales = "free_x")
 plot_bar(ps.top100udat, x = "Sample_Type", fill = "Phylum") + facet_wrap(~Isolation_source, scales = "free_x")
 
-
+samdfushort <- read.table(file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20211112_version/UrbMetadata11122021.txt",header = TRUE)
 # *** Proportional Abundance Code ***
 
 ## Make phyloseq object
 psudat <- phyloseq(otu_table(seqtab.nochimudat, taxa_are_rows=FALSE),
-                   sample_data(samdfudat), # originally sample_data
+                   sample_data(samdfushort), # originally sample_data
                    tax_table(taxasilvaudat))
 psudat <- prune_samples(sample_names(psudat) != "Mock", psudat)
 dnaudat <- Biostrings::DNAStringSet(taxa_names(psudat))
 names(dnaudat) <- taxa_names(psudat)
 psudat <- merge_phyloseq(psudat, dnaudat)
-taxa_names(ps) <- paste0("ASV", seq(ntaxa(psudat)))
+taxa_names(psudat) <- paste0("ASV", seq(ntaxa(psudat)))
 psudat
 
 ## psudat file = all sequences
 ps.propudat <- transform_sample_counts(psudat, function(otu) otu/sum(otu))
-ord.nmds.brayudat <- ordinate(ps.propudat, method="NMDS", distance="bray", color="Sample_Type")
+ord.nmds.brayudat <- ordinate(ps.propudat, method="NMDS", distance="bray", color="Type")
 top100udat <- names(sort(taxa_sums(psudat), decreasing=TRUE))[1:100]
 ps.top100udat <- transform_sample_counts(psudat, function(OTU) OTU/sum(OTU))
 ps.top100udat <- prune_taxa(top100udat, ps.top100udat)
@@ -206,10 +212,10 @@ finalplotudatf <- pudatf + theme(legend.text = element_text(size = 14), legend.t
 ## Genus Level
 psudatg <- tax_glom(ps.top100udat, "Genus")
 ps0udatg <- transform_sample_counts(psudatg, function(x) x / sum(x))
-ps1udatg <- merge_samples(ps0udatg, "Sample_Type")
+ps1udatg <- merge_samples(ps0udatg, "Library_Name")
 ps2udatg <- transform_sample_counts(ps1udatg, function(x) x / sum(x))
-pudatg <- plot_bar(ps2udatg, fill="Genus")
-finalplotudatg <- pudatg + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))
+pudatg <- plot_bar(ps2udatg,fill="Genus") + facet_wrap(~Type, scales = "free_x")
+finalplotudatg <- pudatg + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
 
 # *** Phylogenetic Tree Code ***
 
@@ -237,5 +243,5 @@ phang.alignudat <- phyDat(as(alignmentudat, "matrix"), type="DNA")
 ## Create distance matrix
 dmudat <- dist.ml(phang.alignudat)
 UPGMAtreeudat <- upgma(dmudat)
-write.tree(UPGMAtreeudat, file = "/media/mbb/Sidras_Projects/Urbaniak_paper/VersionControl_DadaCommandRevisions/Dada_commandversions/09242021_version/upgmaurbaniak.nwk", append = FALSE,
+write.tree(UPGMAtreeudat, file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20211112_version/upgmaURB11122021.nwk", append = FALSE,
            digits = 10, tree.names = FALSE)

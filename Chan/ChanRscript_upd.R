@@ -1,11 +1,69 @@
+### Updated October 8 2021
+### Updated November 8 2021
 library(phyloseq)
 library(dplyr)
 library(ggplot2)
 library(microshades)
 
-ps_top100_cdat <- merge_samples(ps.top100cdat, "health_state") # health_state from metadata
+# reading in the updated asv table
+seqtab2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/asvchannewseqnoch11102021.txt")
+seqtab2 <- t(seqtab2)
+
+# reading in the updated taxa file
+taxa2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/newtaxachan.txt")
+
+# reading in the metadata tables
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNS.txt")
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatPBS.txt")
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNAF.txt")
+
+# creating the phyloseq object and abundance plot at the phylum level
+pscdat2 <- phyloseq(otu_table(seqtab2, taxa_are_rows=FALSE),
+                   sample_data(metashort), # originally sample_data
+                   tax_table(taxa2))
+pscdat2 <- prune_samples(sample_names(pscdat2) != "Mock", pscdat2)
+dnacdat2 <- Biostrings::DNAStringSet(taxa_names(pscdat2))
+names(dnacdat2) <- taxa_names(pscdat2)
+pscdat2 <- merge_phyloseq(pscdat2, dnacdat2)
+taxa_names(pscdat2) <- paste0("ASV", seq(ntaxa(pscdat2)))
+pscdat2
+ps.propcdat2 <- transform_sample_counts(pscdat2, function(otu) otu/sum(otu))
+ord.nmds.braycdat2 <- ordinate(ps.propcdat2, method="NMDS", distance="bray", color="health_state")
+top100cdat2 <- names(sort(taxa_sums(pscdat2), decreasing=TRUE))[1:100]
+ps.top100cdat2 <- transform_sample_counts(pscdat2, function(OTU) OTU/sum(OTU))
+ps.top100cdat2 <- prune_taxa(top100cdat2, ps.top100cdat2)
+pscdatp <- tax_glom(ps.top100cdat2, "Phylum")
+ps0cdatp <- transform_sample_counts(pscdatp, function(x) x / sum(x))
+ps1cdatp <- merge_samples(ps0cdatp, "health_state")
+ps2cdatp <- transform_sample_counts(ps1cdatp, function(x) x / sum(x))
+pcdatp <- plot_bar(ps2cdatp, fill="Phylum")
+#plot_bar(ps2cdatp, fill="Phylum")
+finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
+
+# Begin Microshades here
+ps_top100_cdat2 <- merge_samples(ps.top100cdat2,"health_state")
 
 # Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps_100_prepcdat2 <- prep_mdf(ps_top100_cdat2)
+
+# directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
+
+# Create a color object for the specified data
+color_ps_100_cdat2 <- create_color_dfs(ps_100_prepcdat2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_cdat2 <- color_ps_100_cdat2$mdf
+cdf_ps_cdat2 <- color_ps_100_cdat2$cdf
+
+plot_1_c2 <- plot_microshades(mdf_ps_cdat2, cdf_ps_cdat2, group_label = "Phylum Genus")
+
+plot_1_c2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 12))
+
+
+
 ps_100_prepcdat <- prep_mdf(ps_top100_cdat)
 
 # directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
@@ -18,12 +76,11 @@ color_ps_100_cdat <- create_color_dfs(ps_100_prepcdat, group_level = "Phylum", s
 mdf_ps_cdat <- color_ps_100_cdat$mdf
 cdf_ps_cdat <- color_ps_100_cdat$cdf
 
-plot__1_c <- plot_microshades(mdf_ps_cdat, cdf_ps_cdat, group_label = "Phylum Genus")
+plot_1_c <- plot_microshades(mdf_ps_cdat, cdf_ps_cdat, group_label = "Phylum Genus")
 
-plot__1_c + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+plot_1_c + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
   theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
   theme(axis.text.x = element_text(size= 12))
-
 
 
 ### Updated July 17 2021
@@ -143,8 +200,20 @@ library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 library(ggplot2); packageVersion("ggplot2")
 
+# Steps to create a metadata (samdf file)
+theme_set(theme_bw())
+samples.out <- rownames(seqtab.nochim)
+Sample_Name <- sapply(strsplit(samples.out, "D"), `[`, 1)
+gender <- substr(Sample_Name,1,1)
+subject <- substr(Sample_Name,2,999)
+day <- as.integer(sapply(strsplit(samples.out, "D"), `[`, 2))
+samdf <- data.frame(sample_name=Sample_Name, Name=gender, Day=day)
+samdf$When <- "Early"
+samdf$When[samdf$Day>100] <- "Late"
+rownames(samdf) <- samples.out
 
-# Chan Metadata
+
+# Urbaniak Metadata
 samdfcdat <- read.table("/media/mbb/Sidras_Projects/Chan_paper/ChanMetadata.txt", header=TRUE)
 View(samdfcdat)
 
@@ -173,8 +242,8 @@ braynmdscdat <- plot_ordination(ps.propcdat, ord.nmds.braycdat, color="health_st
 top100cdat <- names(sort(taxa_sums(pscdat), decreasing=TRUE))[1:100]
 ps.top100cdat <- transform_sample_counts(pscdat, function(OTU) OTU/sum(OTU))
 ps.top100cdat <- prune_taxa(top100cdat, ps.top100cdat)
-plot_bar(ps.top100cdat, x = "health_state", fill = "Family") + facet_wrap(~Isolate, scales = "free_x")
-plot_bar(ps.top100cdat, x = "health_state", fill = "Phylum") + facet_wrap(~Isolate, scales = "free_x")
+plot_bar(ps.top100cdat, x = "Sample_Type", fill = "Family") + facet_wrap(~Isolation_source, scales = "free_x")
+plot_bar(ps.top100cdat, x = "Sample_Type", fill = "Phylum") + facet_wrap(~Isolation_source, scales = "free_x")
 
 
 # *** Proportional Abundance Code ***
@@ -192,7 +261,7 @@ pscdat
 
 ## pscdat file = all sequences
 ps.propcdat <- transform_sample_counts(pscdat, function(otu) otu/sum(otu))
-ord.nmds.braycdat <- ordinate(ps.propcdat, method="NMDS", distance="bray", color="health_state")
+ord.nmds.braycdat <- ordinate(ps.propcdat, method="NMDS", distance="bray", color="Sample_Type")
 top100cdat <- names(sort(taxa_sums(pscdat), decreasing=TRUE))[1:100]
 ps.top100cdat <- transform_sample_counts(pscdat, function(OTU) OTU/sum(OTU))
 ps.top100cdat <- prune_taxa(top100cdat, ps.top100cdat)
@@ -205,16 +274,16 @@ ps1cdatp <- merge_samples(ps0cdatp, "health_state")
 ps2cdatp <- transform_sample_counts(ps1cdatp, function(x) x / sum(x))
 pcdatp <- plot_bar(ps2cdatp, fill="Phylum")
 #plot_bar(ps2cdatp, fill="Phylum")
-finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))
+finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
 
 ## Family Level
 pscdatf <- tax_glom(ps.top100cdat, "Family")
 ps0cdatf <- transform_sample_counts(pscdatf, function(x) x / sum(x))
-ps1cdatf <- merge_samples(ps0cdatf, "health_state")
+ps1cdatf <- merge_samples(ps0cdatf, "Sample_Type")
 ps2cdatf <- transform_sample_counts(ps1cdatf, function(x) x / sum(x))
 pcdatf <- plot_bar(ps2cdatf, fill="Family")
 finalplotcdatf <- pcdatf + theme(legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 10), axis.text.x = element_text(size = 10), axis.title.y = element_text(size = 12), axis.text.y = element_text(size = 12))
-#plot_bar(ps2urbggsf, x = "Family", fill = "health_state") + facet_wrap(~Abundance, scales = "free_x")
+#plot_bar(ps2urbggsf, x = "Family", fill = "Sample_Type") + facet_wrap(~Abundance, scales = "free_x")
 
 ## Genus Level
 pscdatg <- tax_glom(ps.top100cdat, "Genus")

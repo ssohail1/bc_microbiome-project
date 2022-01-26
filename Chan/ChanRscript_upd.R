@@ -1,86 +1,5 @@
 ### Updated October 8 2021
 ### Updated November 8 2021
-library(phyloseq)
-library(dplyr)
-library(ggplot2)
-library(microshades)
-
-# reading in the updated asv table
-seqtab2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/asvchannewseqnoch11102021.txt")
-seqtab2 <- t(seqtab2)
-
-# reading in the updated taxa file
-taxa2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/newtaxachan.txt")
-
-# reading in the metadata tables
-metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNS.txt")
-metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatPBS.txt")
-metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNAF.txt")
-
-# creating the phyloseq object and abundance plot at the phylum level
-pscdat2 <- phyloseq(otu_table(seqtab2, taxa_are_rows=FALSE),
-                   sample_data(metashort), # originally sample_data
-                   tax_table(taxa2))
-pscdat2 <- prune_samples(sample_names(pscdat2) != "Mock", pscdat2)
-dnacdat2 <- Biostrings::DNAStringSet(taxa_names(pscdat2))
-names(dnacdat2) <- taxa_names(pscdat2)
-pscdat2 <- merge_phyloseq(pscdat2, dnacdat2)
-taxa_names(pscdat2) <- paste0("ASV", seq(ntaxa(pscdat2)))
-pscdat2
-ps.propcdat2 <- transform_sample_counts(pscdat2, function(otu) otu/sum(otu))
-ord.nmds.braycdat2 <- ordinate(ps.propcdat2, method="NMDS", distance="bray", color="health_state")
-top100cdat2 <- names(sort(taxa_sums(pscdat2), decreasing=TRUE))[1:100]
-ps.top100cdat2 <- transform_sample_counts(pscdat2, function(OTU) OTU/sum(OTU))
-ps.top100cdat2 <- prune_taxa(top100cdat2, ps.top100cdat2)
-pscdatp <- tax_glom(ps.top100cdat2, "Phylum")
-ps0cdatp <- transform_sample_counts(pscdatp, function(x) x / sum(x))
-ps1cdatp <- merge_samples(ps0cdatp, "health_state")
-ps2cdatp <- transform_sample_counts(ps1cdatp, function(x) x / sum(x))
-pcdatp <- plot_bar(ps2cdatp, fill="Phylum")
-#plot_bar(ps2cdatp, fill="Phylum")
-finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
-
-# Begin Microshades here
-ps_top100_cdat2 <- merge_samples(ps.top100cdat2,"health_state")
-
-# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
-ps_100_prepcdat2 <- prep_mdf(ps_top100_cdat2)
-
-# directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
-
-# Create a color object for the specified data
-color_ps_100_cdat2 <- create_color_dfs(ps_100_prepcdat2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
-
-
-# Extract
-mdf_ps_cdat2 <- color_ps_100_cdat2$mdf
-cdf_ps_cdat2 <- color_ps_100_cdat2$cdf
-
-plot_1_c2 <- plot_microshades(mdf_ps_cdat2, cdf_ps_cdat2, group_label = "Phylum Genus")
-
-plot_1_c2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
-  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
-  theme(axis.text.x = element_text(size= 12))
-
-
-
-ps_100_prepcdat <- prep_mdf(ps_top100_cdat)
-
-# directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
-
-# Create a color object for the specified data
-color_ps_100_cdat <- create_color_dfs(ps_100_prepcdat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
-
-
-# Extract
-mdf_ps_cdat <- color_ps_100_cdat$mdf
-cdf_ps_cdat <- color_ps_100_cdat$cdf
-
-plot_1_c <- plot_microshades(mdf_ps_cdat, cdf_ps_cdat, group_label = "Phylum Genus")
-
-plot_1_c + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
-  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
-  theme(axis.text.x = element_text(size= 12))
 
 
 ### Updated July 17 2021
@@ -321,3 +240,89 @@ dmcdat <- dist.ml(phang.aligncdat)
 UPGMAtreecdat <- upgma(dmcdat)
 write.tree(UPGMAtreecdat, file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/upgmachan10202021.nwk", append = FALSE,
            digits = 10, tree.names = FALSE)
+                                    
+
+# Microshades Analysis
+                                    
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+library(microshades)
+
+# reading in the updated asv table
+seqtab2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/asvchannewseqnoch11102021.txt")
+seqtab2 <- t(seqtab2)
+
+# reading in the updated taxa file
+taxa2 <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/11162021_version/chaneditedasvs/newtaxachan.txt")
+
+# reading in the metadata tables
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNS.txt")
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatPBS.txt")
+metashort <- read.table(file = "/media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version/ChanMetadatNAF.txt")
+
+# creating the phyloseq object and abundance plot at the phylum level
+pscdat2 <- phyloseq(otu_table(seqtab2, taxa_are_rows=FALSE),
+                   sample_data(metashort), # originally sample_data
+                   tax_table(taxa2))
+pscdat2 <- prune_samples(sample_names(pscdat2) != "Mock", pscdat2)
+dnacdat2 <- Biostrings::DNAStringSet(taxa_names(pscdat2))
+names(dnacdat2) <- taxa_names(pscdat2)
+pscdat2 <- merge_phyloseq(pscdat2, dnacdat2)
+taxa_names(pscdat2) <- paste0("ASV", seq(ntaxa(pscdat2)))
+pscdat2
+ps.propcdat2 <- transform_sample_counts(pscdat2, function(otu) otu/sum(otu))
+ord.nmds.braycdat2 <- ordinate(ps.propcdat2, method="NMDS", distance="bray", color="health_state")
+top100cdat2 <- names(sort(taxa_sums(pscdat2), decreasing=TRUE))[1:100]
+ps.top100cdat2 <- transform_sample_counts(pscdat2, function(OTU) OTU/sum(OTU))
+ps.top100cdat2 <- prune_taxa(top100cdat2, ps.top100cdat2)
+pscdatp <- tax_glom(ps.top100cdat2, "Phylum")
+ps0cdatp <- transform_sample_counts(pscdatp, function(x) x / sum(x))
+ps1cdatp <- merge_samples(ps0cdatp, "health_state")
+ps2cdatp <- transform_sample_counts(ps1cdatp, function(x) x / sum(x))
+pcdatp <- plot_bar(ps2cdatp, fill="Phylum")
+#plot_bar(ps2cdatp, fill="Phylum")
+finalplotcdatp <- pcdatp + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
+
+# Begin Microshades here for Healthy versus Cancer
+ps_top100_cdat2 <- merge_samples(ps.top100cdat2,"health_state")
+
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps_100_prepcdat2 <- prep_mdf(ps_top100_cdat2)
+
+# directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
+
+# Create a color object for the specified data
+color_ps_100_cdat2 <- create_color_dfs(ps_100_prepcdat2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_cdat2 <- color_ps_100_cdat2$mdf
+cdf_ps_cdat2 <- color_ps_100_cdat2$cdf
+
+plot_1_c2 <- plot_microshades(mdf_ps_cdat2, cdf_ps_cdat2, group_label = "Phylum Genus")
+
+plot_1_c2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 12))
+
+                                    
+# Begin Microshades here for sequences
+ps_100_prepcdat <- prep_mdf(ps_top100_cdat)
+
+# directory for saving plots/graphs /media/mbb/Sidras_Projects/Chan_paper/VersionControlDADACommands_Chan/09132021_version
+
+# Create a color object for the specified data
+color_ps_100_cdat <- create_color_dfs(ps_100_prepcdat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_cdat <- color_ps_100_cdat$mdf
+cdf_ps_cdat <- color_ps_100_cdat$cdf
+
+plot_1_c <- plot_microshades(mdf_ps_cdat, cdf_ps_cdat, group_label = "Phylum Genus")
+
+plot_1_c + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 12))
+

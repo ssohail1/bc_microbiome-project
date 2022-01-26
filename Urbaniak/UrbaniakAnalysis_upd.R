@@ -1,33 +1,5 @@
-### Update 09152021
-# install.packages("remotes")
-library(remotes)
-# remotes::install_github("KarstensLab/microshades")
-# remotes::install_github("mikemc/speedyseq")
-
-library(phyloseq)
-library(dplyr)
-library(ggplot2)
-library(microshades)
-
-ps_top100_udat <- merge_samples(ps.top100udat, "Type")
-# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
-ps100_prepudat <- prep_mdf(ps_top100_udat)
-
-# Create a color object for the specified data
-color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
-
-
-# Extract
-mdf_psudat <- color_ps100udat$mdf
-cdf_psudat <- color_ps100udat$cdf
-
-plot_1 <- plot_microshades(mdf_psudat, cdf_psudat, group_label = "Phylum Genus")
-
-plot_1 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
-  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=15)) +
-  theme(axis.text.x = element_text(size= 10)) 
-
-
+### Update 01262022
+ 
 
 ### Update July 17 2021
 
@@ -245,3 +217,33 @@ dmudat <- dist.ml(phang.alignudat)
 UPGMAtreeudat <- upgma(dmudat)
 write.tree(UPGMAtreeudat, file = "/media/mbb/Sidras_Projects/Urbaniak_paper/fastqfiles/VersionControl_DadaCommandRevisions/20211112_version/upgmaURB11122021.nwk", append = FALSE,
            digits = 10, tree.names = FALSE)
+
+# Microshades Analysis
+                                    
+# install.packages("remotes")
+# library(remotes)
+# remotes::install_github("KarstensLab/microshades")
+# remotes::install_github("mikemc/speedyseq")
+
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+library(microshades)
+
+ps_top100_udat <- merge_samples(ps.top100udat, "Type")
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps100_prepudat <- prep_mdf(ps_top100_udat)
+
+# Create a color object for the specified data
+color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_psudat <- color_ps100udat$mdf
+cdf_psudat <- color_ps100udat$cdf
+
+plot_1 <- plot_microshades(mdf_psudat, cdf_psudat, group_label = "Phylum Genus")
+
+plot_1 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=15)) +
+  theme(axis.text.x = element_text(size= 10))

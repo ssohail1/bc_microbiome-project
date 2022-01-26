@@ -1,45 +1,6 @@
-# Updated 09182021
-library(phyloseq)
-library(dplyr)
-library(ggplot2)
-library(microshades)
+# Updated 01262022
 
-pstop100kdat2 <- merge_samples(ps.top100kdat, "env_biome") # looking at tissues
-pstop100kdat2 <- merge_samples(ps.top100kdat, "final_dx") # looking at benign vs malignant
-# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
-ps_100_prepkdat_2 <- prep_mdf(pstop100kdat2)
-
-# Create a color object for the specified data
-color_ps_100kdat_2 <- create_color_dfs(ps_100_prepkdat_2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
-
-
-# Extract
-mdf_ps_kdat2 <- color_ps_100kdat_2$mdf
-cdf_ps_kdat2 <- color_ps_100kdat_2$cdf
-
-plot_1_k2 <- plot_microshades(mdf_ps_kdat2, cdf_ps_kdat2, group_label = "Phylum Genus")
-
-plot_1_k2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
-  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
-  theme(axis.text.x = element_text(size= 14))
-
-
-ps_100_prepkdat_ <- prep_mdf(ps_top100kdat_)
-
-# Create a color object for the specified data
-color_ps_100kdat_ <- create_color_dfs(ps_100_prepkdat_, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
-
-
-# Extract
-mdf_ps_kdat <- color_ps_100kdat_$mdf
-cdf_ps_kdat <- color_ps_100kdat_$cdf
-
-plot_1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
-
-plot_1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
-  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
-  theme(axis.text.x = element_text(size= 14))
-
+# DADA2 Analysis
 
 # Set the working directory
 library(dada2)
@@ -222,7 +183,7 @@ library(phyloseq)
 # Phylogenetic Tree
 ## Extract sequences from DADA2 output
 sequenceskdat <- getSequences(seqtab.nochimkdat)
-names(sequenceskdat)<-sequenceskdat
+names(sequenceskdat) <- sequenceskdat
 
 ## Run Sequence Alignment (MSA) using DECIPHER
 alignmentkdat <- AlignSeqs(DNAStringSet(sequenceskdat), anchor=NA)
@@ -235,3 +196,47 @@ dmkdat <- dist.ml(phang.alignkdat)
 UPGMAtreekdat <- upgma(dmkdat)
 write.tree(UPGMAtreekdat, file = "/media/mbb/Sidras_Projects/Hieken_paper/VersionControl_DadaCommandRevisions/Dada_commandversions/20210918_version/upgmahieken.nwk", append = FALSE,
            digits = 10, tree.names = FALSE)
+          
+                                    
+# Microshades Analysis
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+library(microshades)
+                                    
+pstop100kdat2 <- merge_samples(ps.top100kdat, "env_biome") # looking at tissues
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps_100_prepkdat_2 <- prep_mdf(pstop100kdat2)
+
+# Create a color object for the specified data
+color_ps_100kdat_2 <- create_color_dfs(ps_100_prepkdat_2, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_kdat2 <- color_ps_100kdat_2$mdf
+cdf_ps_kdat2 <- color_ps_100kdat_2$cdf
+
+plot_1_k2 <- plot_microshades(mdf_ps_kdat2, cdf_ps_kdat2, group_label = "Phylum Genus")
+
+plot_1_k2 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 14))
+
+
+ps_top100kdat_ <- merge_samples(ps.top100kdat, "final_dx") # looking at benign vs malignant
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps_100_prepkdat_ <- prep_mdf(ps_top100kdat_)
+
+# Create a color object for the specified data
+color_ps_100kdat_ <- create_color_dfs(ps_100_prepkdat_, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+
+# Extract
+mdf_ps_kdat <- color_ps_100kdat_$mdf
+cdf_ps_kdat <- color_ps_100kdat_$cdf
+
+plot_1_k <- plot_microshades(mdf_ps_kdat, cdf_ps_kdat, group_label = "Phylum Genus")
+
+plot_1_k + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=18)) +
+  theme(axis.text.x = element_text(size= 14))

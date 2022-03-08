@@ -118,9 +118,20 @@ library(ALDEx2)
 #subset for efficiency
 #selex <- selex[1201:1600,]
 #conds <- c(rep("NS", 7), rep("S", 7))
-str(ASVtab[,2])
+#str(ASVtab[,2])
 conditions <- c(rep('BT',25),rep('H',5),rep('BT',1),rep('H',4),rep('BT',1),rep('H',3),rep('BT',3))
 x1 <- aldex.clr(ASVtab1[2:43], conditions, mc.samples = 128, denom = "all", verbose = FALSE)
+x1ttest <- aldex.ttest(x1)
+x1effect <- aldex.effect(x1,include.sample.summary = TRUE,CI = TRUE,verbose = FALSE)
+x1aldex_out <- data.frame(x1ttest, x1effect)
+
+xeffect <- aldex.effect(x1,include.sample.summary = FALSE,CI = TRUE,verbose = FALSE)
+aldex_out <- data.frame(x1ttest, xeffect)
+xalddata <- rownames_to_column(aldex_out,"samp_num") %>%
+  filter(wi.eBH <= 0.05)  %>% # here we chose the wilcoxon output rather than ttest welch
+  dplyr::select(samp_num, we.eBH, wi.eBH, effect, overlap) %>%
+  data.frame()
+View(xalddata)
 
 #ASVtabsub <- ASVtab2[1:42, 1:6943]
 # ASVtabsub <- t(ASVtab2)

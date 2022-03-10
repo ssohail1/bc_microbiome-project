@@ -22,7 +22,12 @@ R: Bioconductor, dada2, phyloseq, Biostrings, ggplot2, DECIPHER, phangorn, hopac
 
 ### How to use
 Clone repository into personal directory using this command,  
-`git clone https://github.com/ssohail1/bc_microbiome-project.git`
+```
+git clone https://github.com/ssohail1/bc_microbiome-project.git
+```
+
 
 To move into bc_microbiome-project directory use `cd`,  
-`cd bc_microbiome-project`
+```
+cd bc_microbiome-project
+```

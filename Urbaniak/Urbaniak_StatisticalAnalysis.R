@@ -78,10 +78,10 @@ ASVtab2 <- ASVtab1[,-1]
 rownames(ASVtab2) <- ASVtab1[,1]
 ASVtab2 <- t(ASVtab2)
 # use compositions for clr
-for (i in 1:6943) {
-  ASVtab2[,i] <- ASVtab2[,i] + 0.50
-  
-}
+# for (i in 1:6943) {
+#   ASVtab2[,i] <- ASVtab2[,i] + 0.50
+#   
+# }
 
 
 # ALDEx2 code
@@ -154,6 +154,10 @@ Kunweighted <- D2K(D.unweighted)
 K.BC <- D2K(D.BC)
 
 library(cluster)
+for (i in 1:6943) {
+  ASVtab2[,i] <- ASVtab2[,i] + 0.50
+  
+}
 clrASVtab2 <- clr(ASVtab2)
 D.euclid <- as.matrix(vegdist(clrASVtab2 , method="euclidean"))
 kmeansclusEuclid <- pam(D.euclid, k=2)
@@ -167,20 +171,6 @@ for (i in 1:42) {
     }
   }
 }
-
-# do not use daisy - it assigns clusters wrong - all samples were 1 except for 1 sample
-# D.eucliddaisy <- daisy(x = clrASVtab2, metric = "euclidean")
-# kmeansclusEucliddaisy <- pam(D.eucliddaisy, k=2)
-# clusplot(kmeansclusEucliddaisy,shade=TRUE)
-# daisyclus <- data.frame(kmeansclusEucliddaisy$clustering)
-# daisyclus$samptype <- 0
-# for (i in 1:42) {
-#   for (j in 1:68) {
-#     if (row.names(daisyclus)[i] == Urbmetatoremove[j,1]) {
-#       daisyclus$samptype[i] <- Urbmetatoremove[j,2]
-#     }
-#   }
-# }
 
 library(stats)
 # install.packages("cluster")
@@ -280,13 +270,16 @@ Urbmet <- data.frame(Urbmet)
 for (i in 1:42) {
   Urbmet[i,2] <- as.double(Urbmet[i,2])
 }
-
+Urbdouble <- Urbmet[,2]
 # Error message
 # Error in model.frame.default(formula = y ~ X1 - 1, drop.unused.levels = TRUE) : 
 #   invalid type (list) for variable 'y'
-for (i in 1:42) {
-  meerkat <- MiRKAT(y= Urbmet[i,2],Ks = c(Kweighted,K.BC), out_type = "D", method = "permutation")
-}
+
+# works!
+meerkatsingle <- MiRKAT(y= Urbdouble, Ks = K.BC, out_type = "D", method = "permutation") # can be Kunweighted or K.BC
+Kslist <- list(Kweighted,Kunweighted,K.BC)
+meerkatmultiple <- MiRKAT(y= Urbdouble,Ks = Kslist, out_type = "D", nperm = 9999, method = "permutation")
+
 
 
 
@@ -321,3 +314,17 @@ plot(weightedkdat, type = "p", pch)
 # Smoker =(SmokingStatus == "Smoker") **2  # a "double" object with 0s and 1s and nothing else
 # anti = (AntibioticUsePast3Months_TimeFromAntibioticUsage != "None")^2
 # cova = cbind(Male, anti)
+
+# do not use daisy - it assigns clusters wrong - all samples were 1 except for 1 sample
+# D.eucliddaisy <- daisy(x = clrASVtab2, metric = "euclidean")
+# kmeansclusEucliddaisy <- pam(D.eucliddaisy, k=2)
+# clusplot(kmeansclusEucliddaisy,shade=TRUE)
+# daisyclus <- data.frame(kmeansclusEucliddaisy$clustering)
+# daisyclus$samptype <- 0
+# for (i in 1:42) {
+#   for (j in 1:68) {
+#     if (row.names(daisyclus)[i] == Urbmetatoremove[j,1]) {
+#       daisyclus$samptype[i] <- Urbmetatoremove[j,2]
+#     }
+#   }
+# }

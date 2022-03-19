@@ -94,27 +94,134 @@ library(compositions)
 library(cluster)
 library(ALDEx2)
 library(tibble)
+library(dplyr)
 
-conditions <- c(rep('BT',25),rep('H',5),rep('BT',1),rep('H',4),rep('BT',1),rep('H',3),rep('BT',3))
-#x <- aldex(ASVtab1[2:43], conditions, mc.samples=128, denom="all", test="t", effect=TRUE, include.sample.summary=TRUE, verbose=FALSE, iterate=FALSE)
-x1 <- aldex.clr(ASVtab1[2:43], conditions, mc.samples = 128, denom = "all", verbose = FALSE)
+ASVtab12 <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVmodifiedSRRs.txt", header = FALSE)
+ASVtab12 <- data.frame(ASVtab12)
+Urbmetatoremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbMetaremovefiles.txt',header=TRUE)
+Urbremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbtoremovebenign.txt', header=FALSE)
+
+m <- rep(0,length(Urbremove[,1]))
+for (i in 1:length(Urbremove[,1])) {
+  # print(i)
+  for (j in 1:68) {
+    if (Urbremove[i,1] == Urbmetatoremove[j,2]) {
+      m[i] <- Urbmetatoremove[j,1]
+    }
+  }
+}
+
+for (i in 1:length(m)) {
+  if (m[i] == 0) {
+    m <- m[-i]
+  } else {
+    print(FALSE)
+  }
+  
+}
+
+m <- data.frame(m)
+count <- 0
+for (i in 2:14) {
+  for (j in 1:length(m[,1])) {
+    #if (var1 != NULL) {
+    if (m[j,1] == ASVtab12[1,i]) {
+      ASVtab12 <- ASVtab12[,-i]
+    } else{
+      count <- count+1
+    }
+  }
+}
+
+for (i in 14:26) {
+  for (j in 1:length(m[,1])) {
+    #if (var1 != NULL) {
+    if (m[j,1] == ASVtab12[1,i]) {
+      ASVtab12 <- ASVtab12[,-i]
+    } else{
+      count <- count+1
+    }
+  }
+}
+
+for (i in 26:33) {
+  for (j in 1:length(m[,1])) {
+    #if (var1 != NULL) {
+    if (m[j,1] == ASVtab12[1,i]) {
+      ASVtab12 <- ASVtab12[,-i]
+    } else{
+      count <- count+1
+    }
+  }
+}
+
+for (i in 2:33) {
+  for (j in 1:length(m[,1])) {
+    #if (var1 != NULL) {
+    if (m[j,1] == ASVtab12[1,i]) {
+      ASVtab12 <- ASVtab12[,-i]
+    } else{
+      count <- count+1
+    }
+  }
+}
+
+#write.table(ASVtab12,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVremovebenign.txt", row.names = FALSE, col.names = FALSE)
+ASVtab12 <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVremovebenign.txt", header = TRUE)
+ASVtab12 <- data.frame(ASVtab12)
+ASVtab211 <- ASVtab12[,-1]
+rownames(ASVtab211) <- ASVtab12[,1]
+conditions <- c(rep("BT",15),rep("H",5),rep("BT",1),rep("H",4),rep("BT",1),rep("H",3),rep("BT",3))
+#x <- aldex(ASVtab12[2:43], conditions, mc.samples=128, denom="all", test="t", effect=TRUE, include.sample.summary=TRUE, verbose=FALSE, iterate=FALSE)
+
+x1 <- aldex.clr(ASVtab211, conditions, mc.samples = 128, denom = "all", verbose = FALSE)
 x1ttest <- aldex.ttest(x1)
 x1effect <- aldex.effect(x1,include.sample.summary = TRUE,CI = TRUE,verbose = FALSE)
 x1aldex_out <- data.frame(x1ttest, x1effect)
-write.table(x1aldex_out,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/aldexoutput03102022_allsamps.txt")#, row.names = FALSE)
-x1alddata <- rownames_to_column(x1aldex_out,"samp_num") %>%
+#write.table(x1aldex_out,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/aldexoutput03172022_allsamps03172022.txt")#, row.names = FALSE)
+x1alddata <- rownames_to_column(x1aldex_out,"ASVs") %>%
   filter(wi.eBH <= 0.05)  %>% # here we chose the wilcoxon output rather than ttest welch
-  dplyr::select(samp_num, we.eBH, wi.eBH, effect, overlap) %>%
+  dplyr::select(ASVs, we.eBH, wi.eBH, effect, overlap) %>%
   data.frame()
-x1alddata$ASVs <- 0
-for (i in 1:29) {
-  for (j in 1:6943) {
-    n <- x1alddata$samp_num[i]
-    x1alddata$ASVs[i] <- ASVtab1[n,1]
+
+Urbtaxa <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbtaxafile.txt",header = TRUE)
+Urbtaxa <- data.frame(Urbtaxa)
+
+count <- vector()
+x1alddata$Taxa <- 0
+for (i in 1:length(x1alddata$ASVs)) {
+  # nm <- x1alddata$samp_num[i]
+  for (j in 1:length(Urbtaxa[,1])) {
+    if (Urbtaxa[j,1] == x1alddata$ASVs[i]){
+      nmj <- as.character(Urbtaxa[j,2:7])
+      if (is.na(nmj[length(nmj)]) == TRUE) {
+        x1alddata$Taxa[i] <- nmj[length(nmj)-1]
+        count <- c(count,length(nmj)-1)
+      } else{
+        x1alddata$Taxa[i] <- nmj[length(nmj)]
+        count <- c(count,length(nmj))
+      }
+    }
   }
 }
+
+
+# x1alddata$ASVs <- 0
+# for (i in 1:length(x1alddata[,1])) {
+#   n <- x1alddata$samp_num[i]
+#   x1alddata$ASVs[i] <- ASVtab12[n,1]
+# }
+
+# count tells us whether genus - 6 or family - 5 was added
+print(count)
+
+# x1alddata1 <- as.data.frame(x1alddata)
+# for (i in 1:7) {
+#   x1alddata[,i] <- data.frame(x1alddata[,i])
+# }
+
 # Has the ASVs in the aldex output
-write.table(x1alddata,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/x1aldexoutput03102022_ver2.txt") #, row.names = FALSE)
+write(x1alddata,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/x1aldexoutput03182022_ver0318.txt")
 
 xeffect <- aldex.effect(x1,include.sample.summary = FALSE,CI = TRUE,verbose = FALSE)
 aldex_out <- data.frame(x1ttest, xeffect)
@@ -124,14 +231,13 @@ xalddata <- rownames_to_column(aldex_out,"samp_num") %>%
   data.frame()
 View(xalddata)
 xalddata$ASVs <- 0
-for (i in 1:29) {
-  for (j in 1:6943) {
-    n <- xalddata$samp_num[i]
-    xalddata$ASVs[i] <- ASVtab1[n,1]
-  }
+for (i in 1:length(xalddata[,1])) {
+  n <- xalddata$samp_num[i]
+  xalddata$ASVs[i] <- ASVtab12[n,1]
 }
+
 # Has the ASVs in the aldex output
-write.table(xalddata,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/aldexoutput03102022_ver2.txt") #, row.names = FALSE)
+write.table(xalddata,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/aldexoutput03172022_ver0317.txt") #, row.names = FALSE)
 
 # K-means Clustering code
 # library(ape)
@@ -139,38 +245,23 @@ write.table(xalddata,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/
 # library(GUniFrac)
 # library(vegan)
 
+ASVtab21 <- ASVtab12[,-1]
+rownames(ASVtab21) <- ASVtab12[,1]
+ASVtab21 <- t(ASVtab21)
+
 Urbtree <- read.tree(file = "~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/upgmaURB11122021.nwk")
-ASVtabsub_rff <- Rarefy(ASVtabsub,1024) #$ASVtabsub_rff
-listnums <- ASVtabsub_rff[1]
-listnums <- listnums[1][["otu.tab.rff"]]
-ASVtab <- as.numeric(as.matrix(ASVtab))
-ASVtabunifracs <- GUniFrac(ASVtab2, Urbtree, alpha=c(0, 0.5, 1))$unifracs
+# ASVtabsub_rff <- Rarefy(ASVtabsub,1024) #$ASVtabsub_rff
+# listnums <- ASVtabsub_rff[1]
+# listnums <- listnums[1][["otu.tab.rff"]]
+# ASVtab <- as.numeric(as.matrix(ASVtab))
+ASVtabunifracs <- GUniFrac(ASVtab21, Urbtree, alpha=c(0, 0.5, 1))$unifracs
 D.weighted <- ASVtabunifracs[,,"d_1"]
 D.unweighted <- ASVtabunifracs[,,"d_UW"]
-D.BC <- as.matrix(vegdist(ASVtab2 , method="bray"))
+D.BC <- as.matrix(vegdist(ASVtab21 , method="bray"))
 # for constructing kernel matrices for MiRKAT
 Kweighted <- D2K(D.weighted)
 Kunweighted <- D2K(D.unweighted)
 K.BC <- D2K(D.BC)
-
-library(cluster)
-for (i in 1:6943) {
-  ASVtab2[,i] <- ASVtab2[,i] + 0.50
-  
-}
-clrASVtab2 <- clr(ASVtab2)
-D.euclid <- as.matrix(vegdist(clrASVtab2 , method="euclidean"))
-kmeansclusEuclid <- pam(D.euclid, k=2)
-clusplot(kmeansclusEuclid,shade=TRUE)
-euclidclus <- data.frame(kmeansclusEuclid$clustering)
-euclidclus$samptype <- 0
-for (i in 1:42) {
-  for (j in 1:68) {
-    if (row.names(euclidclus)[i] == Urbmetatoremove[j,1]) {
-      euclidclus$samptype[i] <- Urbmetatoremove[j,2]
-    }
-  }
-}
 
 library(stats)
 # install.packages("cluster")
@@ -276,12 +367,35 @@ Urbdouble <- Urbmet[,2]
 #   invalid type (list) for variable 'y'
 
 # works!
-meerkatsingle <- MiRKAT(y= Urbdouble, Ks = K.BC, out_type = "D", method = "permutation") # can be Kunweighted or K.BC
+meerkatsingleBC <- MiRKAT(y= Urbdouble, Ks = K.BC, out_type = "D", method = "permutation") # can be Kunweighted or K.BC
+meerkatsingleunweigUniFrac <- MiRKAT(y= Urbdouble, Ks = Kunweighted, out_type = "D", method = "permutation")
+meerkatsingleweighUniFrac <- MiRKAT(y= Urbdouble, Ks = Kweighted, out_type = "D", method = "permutation")
 Kslist <- list(Kweighted,Kunweighted,K.BC)
 meerkatmultiple <- MiRKAT(y= Urbdouble,Ks = Kslist, out_type = "D", nperm = 9999, method = "permutation")
 
 
+library(cluster)
+for (i in 1:6943) {
+  ASVtab21[,i] <- ASVtab21[,i] + 0.50
+  
+}
+rownames(ASVtab21)
+rownames(ASVtab21) <- c("BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "BT", "H", "H", "H", "H", "H", "BT", "H", "H", "H", "H", "BT", "H", "H", "H", "BT", "BT", "BT")
+clrASVtab21 <- clr(ASVtab21)
+D.euclid <- as.matrix(vegdist(clrASVtab21 , method="euclidean"))
+kmeansclusEuclid <- pam(D.euclid, k=2)
+clusplot(kmeansclusEuclid,shade=TRUE)
+clusplot(kmeansclusEuclid,shade=TRUE,labels = 2,add=TRUE)
 
+# euclidclus <- data.frame(kmeansclusEuclid$clustering)
+# euclidclus$samptype <- 0
+# for (i in 1:32) {
+#   for (j in 1:68) {
+#     if (row.names(euclidclus)[i] == Urbmetatoremove[j,1]) {
+#       euclidclus$samptype[i] <- Urbmetatoremove[j,2]
+#     }
+#   }
+# }
 
 
 
@@ -328,3 +442,13 @@ plot(weightedkdat, type = "p", pch)
 #     }
 #   }
 # }
+# 
+# m0 <- matrix(NA, 4, 0)
+# rownames(m0)
+# 
+# m2 <- cbind(1, 1:4)
+# colnames(m2, do.NULL = FALSE)
+# colnames(m2) <- c("x","Y")
+# rownames(m2) <- rownames(m2, do.NULL = FALSE, prefix = "Obs.")
+# m2
+

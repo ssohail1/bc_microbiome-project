@@ -1,3 +1,132 @@
+# Prop - Abund
+# BiocManager::install(version='3.14')
+# BiocManager::install("microbiome")
+# install.packages("remotes")
+# remotes::install_github("vmikk/metagMisc")
+library(metagMisc); packageVersion("metagMisc")
+
+export_ps <- phyloseq_to_df(ps)
+library(microbiome)
+# data(peerj32)
+# p <- boxplot_abundance(peerj32$phyloseq, x='time', y='Akkermansia',
+#                        line='subject')
+
+seqtab.nochimudat <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVmodifiedSRRs.txt", header = TRUE)
+seqtab.nochimudat <- data.frame(seqtab.nochimudat)
+seqtab.nochimudat1 <- seqtab.nochimudat[,-1]
+rownames(seqtab.nochimudat1) <- seqtab.nochimudat[,1]
+seqtab.nochimudat1 <- t(seqtab.nochimudat1)
+
+taxasilvaudat <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbtaxafile_R.txt",header = TRUE)
+taxasilvaudat <- data.frame(taxasilvaudat)
+taxasilvaudat1 <- taxasilvaudat[,-1]
+rownames(taxasilvaudat1) <- taxasilvaudat[,1]
+taxasilvaudat1 <- as.matrix(taxasilvaudat1)
+
+Urbmetatoremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbmetremove42samp.txt',header=TRUE)
+samdfudat <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbaniakMet--.txt",header = TRUE)
+samdfudat <- data.frame(samdfudat)
+healthy <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofhea.txt",header = TRUE)
+healthy <- data.frame(healthy)
+ben <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofben.txt",header = TRUE)
+ben <- data.frame(ben)
+ca <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofca.txt",header = TRUE)
+ca <- data.frame(ca)
+samdfudat$Types <- 0
+for (i in 1:length(Urbmetatoremove[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+  if (rownames(samdfudat)[j] == Urbmetatoremove[i,1]){
+    samdfudat$Types[j] <- Urbmetatoremove[i,2]
+  }
+  }
+}
+samdfudat$bencahea <- 0
+for (i in 1:length(ben[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,3] == ben[i,1]){
+      samdfudat$bencahea[j] <- ben[i,2]
+    }
+  }
+}
+for (i in 1:length(healthy[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,3] == healthy[i,1]){
+      samdfudat$bencahea[j] <- healthy[i,2]
+    }
+  }
+}
+for (i in 1:length(ca[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,3] == ca[i,1]){
+      samdfudat$bencahea[j] <- ca[i,2]
+    }
+  }
+}
+for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,2] == 1){
+      samdfudat$Sample_Type[j] <- "Breast_Tumor"
+  }
+}
+for (j in 1:length(rownames(samdfudat))) {
+  if (samdfudat[j,2] == 0){
+    samdfudat$Sample_Type[j] <- "Healthy"
+  }
+}
+samdfudat <- data.frame(samdfudat)
+View(samdfudat)
+
+#samdfudat$Types <- c(rep('BT',25),rep('H',5),rep('BT',1),rep('H',4),rep('BT',1),rep('H',3),rep('BT',3))
+# install.packages("remotes")
+# remotes::install_github("KarstensLab/microshades")
+# install.packages("cowplot")
+# remotes::install_github("mikemc/speedyseq")
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+library(microshades)
+library(speedyseq)
+
+psudat <- phyloseq(otu_table(seqtab.nochimudat1, taxa_are_rows=FALSE),
+                   sample_data(samdfudat), # originally sample_data
+                   tax_table(taxasilvaudat1))
+psudat <- prune_samples(sample_names(psudat) != "Mock", psudat)
+dnaudat <- Biostrings::DNAStringSet(taxa_names(psudat))
+names(dnaudat) <- taxa_names(psudat)
+psudat <- merge_phyloseq(psudat, dnaudat)
+taxa_names(psudat) <- paste0("ASV", seq(ntaxa(psudat)))
+psudat
+ps.propudat <- transform_sample_counts(psudat, function(otu) otu/sum(otu))
+ord.nmds.brayudat <- ordinate(ps.propudat, method="NMDS", distance="bray", color="Type")
+top100udat <- names(sort(taxa_sums(psudat), decreasing=TRUE)) [1:100]
+ps.top100udat <- transform_sample_counts(psudat, function(OTU) OTU/sum(OTU))
+ps.top100udat <- prune_taxa(top100udat, ps.top100udat)
+psudatg <- tax_glom(ps.top100udat, "Genus")
+ps0udatg <- transform_sample_counts(psudatg, function(x) x / sum(x))
+#ps1udatg <- merge_samples(ps0udatg, "Types") yields NAs in columns of samdfudat within ps1udatg
+ps2udatg <- transform_sample_counts(ps0udatg, function(x) x / sum(x))
+pudatg <- plot_bar(ps2udatg, x= "Types", fill="Genus") + facet_wrap(~bencahea, scales = "free_x")
+finalplotudatg <- pudatg + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
+finalplotudatg
+
+boxplot_abundance(d=ps.top100udat, x="Types", y='Bacillus')
+
+ps_top100_udat <- merge_samples(ps.top100udat, "Types")
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+ps100_prepudat <- prep_mdf(ps_top100_udat)
+
+# Create a color object for the specified data
+color_ps100udat <- create_color_dfs(ps100_prepudat, group_level = "Phylum", subgroup_level = "Genus", cvd = TRUE, selected_groups = c('Proteobacteria', 'Actinobacteriota', 'Bacteroidota', 'Firmicutes'))
+
+# Extract
+mdf_psudat <- color_ps100udat$mdf
+cdf_psudat <- color_ps100udat$cdf
+
+plot_1 <- plot_microshades(mdf_psudat, cdf_psudat, group_label = "Phylum Genus")
+
+plot_1 + scale_y_continuous(labels = scales::percent, expand = expansion(0)) +
+  theme(legend.key.size = unit(0.2, "cm"), text=element_text(size=15)) +
+  theme(axis.text.x = element_text(size= 10))
+
 
 # Formatting ASV table for clr() function
 # Appending the SRR file that has the corresponding HS or BTS metadata associated to m
@@ -8,7 +137,7 @@ Urbmetatoremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnaly
 Urbremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbtoremove.txt', header=FALSE)
 m <- rep(0,27)
 for (i in 1:27) {
- # print(i)
+  # print(i)
   for (j in 1:68) {
     if (Urbremove[i,1] == Urbmetatoremove[j,2]) {
       m[i] <- Urbmetatoremove[j,1]
@@ -22,7 +151,7 @@ for (i in 1:length(m)) {
   } else {
     print(FALSE)
   }
-
+  
 }
 
 m <- data.frame(m)
@@ -31,10 +160,10 @@ for (i in 2:27) {
   for (j in 1:length(m[,1])) {
     #if (var1 != NULL) {
     if (m[j,1] == ASVtab[1,i]) {
-        ASVtab <- ASVtab[,-i]
-      } else{
+      ASVtab <- ASVtab[,-i]
+    } else{
       count <- count+1
-      }
+    }
   }
 }
 
@@ -71,7 +200,7 @@ for (i in 2:43) {
   }
 }
 
-write.table(ASVtab,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVmodifiedSRRs.txt", row.names = FALSE, col.names = FALSE)
+#write.table(ASVtab,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVmodifiedSRRs.txt", row.names = FALSE, col.names = FALSE)
 ASVtab1 <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVmodifiedSRRs.txt", header = TRUE)
 ASVtab1 <- data.frame(ASVtab1)
 ASVtab2 <- ASVtab1[,-1]
@@ -86,6 +215,7 @@ ASVtab2 <- t(ASVtab2)
 
 # ALDEx2 code
 # install.packages('compositions')
+# BiocManager::install("ALDEx2")
 library(ape)
 library(MiRKAT)
 library(GUniFrac)
@@ -166,6 +296,17 @@ for (i in 2:33) {
   }
 }
 
+# ALDEx2
+library(ape)
+library(MiRKAT)
+library(GUniFrac)
+library(vegan)
+library(compositions)
+library(cluster)
+library(ALDEx2)
+library(tibble)
+library(dplyr)
+library(phyloseq)
 #write.table(ASVtab12,"~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVremovebenign.txt", row.names = FALSE, col.names = FALSE)
 ASVtab12 <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbASVremovebenign.txt", header = TRUE)
 ASVtab12 <- data.frame(ASVtab12)
@@ -196,14 +337,214 @@ for (i in 1:length(x1alddata$ASVs)) {
       nmj <- as.character(Urbtaxa[j,2:7])
       if (is.na(nmj[length(nmj)]) == TRUE) {
         x1alddata$Taxa[i] <- nmj[length(nmj)-1]
-        count <- c(count,length(nmj)-1)
+        count <- c(count,j)
       } else{
         x1alddata$Taxa[i] <- nmj[length(nmj)]
-        count <- c(count,length(nmj))
+        count <- c(count,j)
+        #count <- c(count,length(nmj))
       }
     }
   }
 }
+
+Urbremben <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbremoveben.txt',header=TRUE)
+Urbmetatoremove <- read.table('~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/Urbmetremove42samp.txt',header=TRUE)
+samdfudat <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/UrbaniakMet--.txt",header = TRUE)
+samdfudat <- data.frame(samdfudat)
+healthy <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofhea.txt",header = TRUE)
+healthy <- data.frame(healthy)
+ben <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofben.txt",header = TRUE)
+ben <- data.frame(ben)
+ca <- read.table("~/Documents/Urbaniak_02152022_version/MicrobAnalystInputs/listofca.txt",header = TRUE)
+ca <- data.frame(ca)
+samdfudat$Types <- 0
+for (i in 1:length(Urbmetatoremove[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (rownames(samdfudat)[j] == Urbmetatoremove[i,1]){
+      samdfudat$Types[j] <- Urbmetatoremove[i,2]
+    }
+  }
+}
+for (i in 1:length(Urbremben[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat$Types[j] == Urbremben[i,1]){
+      samdfudat <- samdfudat[-j,]
+    }
+  }
+}
+
+
+for (i in 1:length(healthy[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,3] == healthy[i,1]){
+      samdfudat$bencahea[j] <- healthy[i,2]
+    }
+  }
+}
+for (i in 1:length(ca[,1])) {
+  for (j in 1:length(rownames(samdfudat))) {
+    if (samdfudat[j,3] == ca[i,1]){
+      samdfudat$bencahea[j] <- ca[i,2]
+    }
+  }
+}
+for (j in 1:length(rownames(samdfudat))) {
+  if (samdfudat[j,2] == 1){
+    samdfudat$Sample_Type[j] <- "Breast_Tumor"
+  }
+}
+for (j in 1:length(rownames(samdfudat))) {
+  if (samdfudat[j,2] == 0){
+    samdfudat$Sample_Type[j] <- "Healthy"
+  }
+}
+samdfudat <- data.frame(samdfudat)
+View(samdfudat)
+seqtab.nochimudat1 <- t(ASVtab211)
+library(phyloseq)
+psudat <- phyloseq(otu_table(seqtab.nochimudat1, taxa_are_rows=FALSE),
+                   sample_data(samdfudat), # originally sample_data
+                   tax_table(taxasilvaudat1))
+psudat <- prune_samples(sample_names(psudat) != "Mock", psudat)
+dnaudat <- Biostrings::DNAStringSet(taxa_names(psudat))
+names(dnaudat) <- taxa_names(psudat)
+psudat <- merge_phyloseq(psudat, dnaudat)
+taxa_names(psudat) <- paste0("ASV", seq(ntaxa(psudat)))
+psudat
+# ps.propudat <- transform_sample_counts(psudat, function(otu) otu/sum(otu))
+# ord.nmds.brayudat <- ordinate(ps.propudat, method="NMDS", distance="bray", color="Type")
+top100udat <- names(sort(taxa_sums(psudat), decreasing=TRUE)) 
+ps.top100udat <- transform_sample_counts(psudat, function(OTU) OTU/sum(OTU))
+ps.top100udat <- prune_taxa(top100udat, ps.top100udat)
+# psudatg <- tax_glom(ps.top100udat, "Genus")
+# ps0udatg <- transform_sample_counts(psudatg, function(x) x / sum(x))
+# ps1udatg <- merge_samples(ps0udatg, "bencahea") #yields NAs in columns of samdfudat within ps1udatg
+# ps2udatg <- transform_sample_counts(ps1udatg, function(x) x / sum(x))
+
+library(metagMisc)
+propASVdata <- data.frame(ps.top100udat@otu_table)
+propASVdata <- t(propASVdata)
+colnames(propASVdata) <- c(rep("BT",15),rep("H",5),rep("BT",1),rep("H",4),rep("BT",1),rep("H",3),rep("BT",3))
+# 1704/(sum(ASVtab211[,1]))
+# 878/(sum(ASVtab211[,2]))
+# 1098/(sum(ASVtab211[,3]))
+asvs <- rep(0,length(count))
+for (i in 1:length(count)) {
+  asvs[i] <- paste("ASV",count[i],sep = "")
+}
+count <- vector()
+for (i in 1:length(asvs)) {
+  for (j in 1:length(colnames(propASVdata))) {
+    if (asvs[i] == colnames(propASVdata)[j]) {
+      count <- c(count,j)
+     # boxplot(propASVdata[j,])
+    }
+  }
+}
+
+x1alddata1 <- rownames_to_column(x1aldex_out,"ASVs") %>%
+  #filter(wi.eBH <= 0.05)  %>% # here we chose the wilcoxon output rather than ttest welch
+  dplyr::select(ASVs) %>%
+  data.frame()
+x1alddata1 <- data.frame(x1alddata1[1:32,1])
+x1alddata1$zero <- rep(0,32)
+# colnames(x1alddata1) <- "ASV"
+rownames(x1alddata1) <- rownames(propASVdata)
+newdatf <- cbind(x1alddata1,propASVdata[,count[1:20]])
+View(newdatf)
+newdatf$tissuetyp <- c(rep("BT",15),rep("H",5),rep("BT",1),rep("H",4),rep("BT",1),rep("H",3),rep("BT",3))
+newdatf <- newdatf[,-1]
+newdatf <- newdatf[,-1]
+library(reshape2)
+mndat <- melt(newdatf)
+ggplot(mndat,aes(x=tissuetyp,y=value)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = variable), height = 0, width = .2) +
+  facet_wrap(~variable)
+
+newdatftaxa <- cbind(x1alddata1,propASVdata[,count[1:20]])
+newdatftaxa <- newdatftaxa[,-1]
+newdatftaxa <- newdatftaxa[,-1]
+colnames(newdatftaxa) <- x1alddata$Taxa
+newdatftaxa$tissuetyp <- c(rep("BT",15),rep("H",5),rep("BT",1),rep("H",4),rep("BT",1),rep("H",3),rep("BT",3))
+mndattaxa <- melt(newdatftaxa)
+ggplot(mndattaxa,aes(x=tissuetyp,y=value)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = variable), height = 0, width = .2) +
+  facet_wrap(~variable)
+
+# for (i in 1:length(colnames(newdatf))-1) {
+#   # pdf(file= "samples1_.pdf", onefile = TRUE)
+#   print(ggplot(newdatf,aes(x=tissuetyp,y=paste("ASV",count[i]))) +
+#     geom_boxplot()) +
+#     labs(x="",y="ASV")
+# }
+#asvs <- data.frame(asvs)
+dataps2udatg <- psmelt(ps.top100udat)
+export_ps <- phyloseq_to_df(ps.top100udat)
+# dataps2udatg1 <- dataps2udatg[,-1]
+# dataps2udatg1 <- t(dataps2udatg1)
+# colnames(dataps2udatg1) <- dataps2udatg[,1]
+# dataps2udatg1 <- t(dataps2udatg1)
+#psgraph <- rep(1,length(x1alddata$Taxa))
+ps2graphslist <- list()
+# plots <- list()  # new empty list
+# for (i in 1:6) {
+#   p1 = qplot(1:10, rnorm(10), main = i)
+#   plots[[i]] <- p1  # add each plot into plot list
+# }
+# multiplot(plotlist = plots)
+library(ggplot2)
+for (i in 1:length(x1alddata$Taxa)){
+ # pdf(file= "samples11.pdf", onefile = TRUE)
+  ps2data <- column_to_rownames(dataps2udatg,"OTUs") %>%
+    filter(Genus == x1alddata$Taxa[i])  %>% # here we chose the wilcoxon output rather than ttest welch
+    filter(OTU == asvs[i])
+    dplyr::select(OTUs,Abundance, Sample, Genus, OTU) %>%
+    data.frame()
+ # ps2data %>%
+  ggplot(data=ps2data,aes(x= Sample, y= Abundance, fill= Genus)) +
+  geom_boxplot()
+}
+  #ps2graphslist[[i]] <- p1
+
+  # ps2graphslist[i] <- p
+  #ggsave("arrange.pdf", arrangeGrob(grobs = l), device = "pdf",limitsize = FALSE)
+  
+ # ggsave("sigUrbgraphboxplot.pdf",limitsize = FALSE)
+  # pdf("plots.pdf")
+  # for (i in 1:20) {
+  #   print(ps2graphslist[[i]])
+  # }
+  # dev.off()
+#}
+
+
+# ps2data <- rownames_to_column(dataps2udatg,"OTUs") %>%
+#   filter(Genus == "Bacillus")  %>% # here we chose the wilcoxon output rather than ttest welch
+#   dplyr::select(OTUs, Abundance, Sample_Type, Genus) %>%
+#   data.frame()
+# 
+# ps2data %>%
+#   ggplot( aes(x=Sample_Type, y=Abundance, fill=Genus)) +
+#   geom_boxplot() +
+
+# for (i in 1:length(ps2data$Sample_Type)){
+#   if (ps2data$Sample_Type[i] == "Breast_Tumor") {
+#     ps2data$Sample_Type[i] <- 2
+#   } else {
+#     if (ps2data$Sample_Type[i] == "Healthy") {
+#       ps2data$Sample_Type[i] <- 1
+#   }
+#   }
+# }
+# #for (i in 1:length(ps2data$Sample_Type)){
+# ps2data$Sample_Type <- as.numeric(ps2data$Sample_Type)
+# #}
+# for (i in 1:length(ps2data$Sample_Type)){
+#   ps2data$Abundance[i] <- as.numeric(ps2data$Abundance[i])
+# }
+# boxplot(x=ps2data$Sample_Type,y=ps2data$Abundance)
 
 
 # x1alddata$ASVs <- 0
@@ -375,6 +716,7 @@ meerkatmultiple <- MiRKAT(y= Urbdouble,Ks = Kslist, out_type = "D", nperm = 9999
 
 
 library(cluster)
+library(compositions)
 for (i in 1:6943) {
   ASVtab21[,i] <- ASVtab21[,i] + 0.50
   
@@ -385,7 +727,7 @@ clrASVtab21 <- clr(ASVtab21)
 D.euclid <- as.matrix(vegdist(clrASVtab21 , method="euclidean"))
 kmeansclusEuclid <- pam(D.euclid, k=2)
 clusplot(kmeansclusEuclid,shade=TRUE)
-clusplot(kmeansclusEuclid,shade=TRUE,labels = 2,add=TRUE)
+clusplot(kmeansclusEuclid,shade=TRUE,main = paste("Euclid K-means Cluster"),labels = 2,add=TRUE,)
 
 # euclidclus <- data.frame(kmeansclusEuclid$clustering)
 # euclidclus$samptype <- 0

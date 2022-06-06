@@ -341,4 +341,17 @@ ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
   geom_point() +
   stat_ellipse() +
   labs(title = "Unweighted UniFrac")
+                                         
+
+#### MiRKAT ####
+for (i in 1:length(Hiekmet$env_feature)) {
+  Hiekmet[i,3] <- as.double(Hiekmet[i,3])
+}
+Hiekdouble <- Hiekmet[,3]
+
+meerkatsingleHiekunweigUniFrac <- MiRKAT(y= Hiekdouble, Ks = KunweightedHiek, out_type = "D", method = "permutation")
+meerkatsingleHiekweighUniFrac <- MiRKAT(y= Hiekdouble, Ks = KweightedHiek, out_type = "D", method = "permutation")
+meerkatsingleHiekunweigUniFrac
+meerkatsingleHiekweighUniFrac
+
 

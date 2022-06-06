@@ -1,4 +1,3 @@
-#### Linda ####
 #### Input ####
 ASVtabprev2 <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabmodifHieken03152022__.txt', header = TRUE)
 ASVtabprev2 <- data.frame(ASVtabprev2)
@@ -248,67 +247,87 @@ mndat1 <- data.frame(mndat1)
 ggplot(mndat1,aes(x=variable,y=value,fill=taxa)) +
   geom_col() +
   facet_wrap(~taxa)
-                                         
-                                         
-#### Unweighted UniFrac benign vs invasive cancer ####
-                                         
-psudat <- phyloseq(otu_table(ASVtabprev2Hiek, taxa_are_rows=FALSE),
+
+#### unweighted UniFrac plot ####
+ASVtab <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
+ASVtab <- data.frame(ASVtab)
+ASVtab2Hiek <- ASVtab[,-1]
+rownames(ASVtab2Hiek) <- ASVtab[,1]
+ASVtab2Hiek <- t(ASVtab2Hiek)
+seqtab.nochimhkdat1 <- data.frame(ASVtab2Hiek)
+
+Hiekmet <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/Hmetadata_mirkat.txt',header=TRUE)
+HMetaHiek_1 <- read.table("~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/Hmetadata.txt")
+Hiekmet$additional <- HMetaHiek_1$V2
+
+storing <- c()
+for (i in 1:length(rownames(Hiekmet))) {
+  if (Hiekmet[i,1] == "Buccal_Cells") {
+    storing <- c(storing, rownames(Hiekmet)[i])
+    Hiekmet <- Hiekmet[-i,]
+  }
+}
+for (i in 1:length(rownames(Hiekmet))) {
+  if (Hiekmet[i,1] == "Skin_Swab") {
+    storing <- c(storing, rownames(Hiekmet)[i])
+    Hiekmet <- Hiekmet[-i,]
+  }
+}
+for (i in 1:length(rownames(Hiekmet))) {
+  if (Hiekmet[i,1] == "Skin_Tissue") {
+    storing <- c(storing, rownames(Hiekmet)[i])
+    Hiekmet <- Hiekmet[-i,]
+  }
+}
+for (i in 1:length(rownames(Hiekmet))) {
+  if (Hiekmet[i,4] == "Atypia") {
+    storing <- c(storing, rownames(Hiekmet)[i])
+    Hiekmet <- Hiekmet[-i,]
+  }
+}
+for (i in 1:length(rownames(Hiekmet))) {
+  if (Hiekmet[i,4] == "DCIS") {
+    storing <- c(storing, rownames(Hiekmet)[i])
+    Hiekmet <- Hiekmet[-i,]
+  }
+}
+for (i in 1:length(rownames(seqtab.nochimhkdat1))) {
+  for (j in 1:length(storing)) {
+    if (rownames(seqtab.nochimhkdat1)[i] == storing[j]){
+      seqtab.nochimhkdat1 <- seqtab.nochimhkdat1[-i,]
+    }
+  }
+}
+
+hiektaxa <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/taxasilvahieken10082021.txt',header=TRUE)
+hiektaxa <- data.frame(hiektaxa)
+hiektaxa1 <- hiektaxa[,-1]
+rownames(hiektaxa1) <- hiektaxa[,1]
+hiektaxa2 <- as.matrix(hiektaxa1)
+
+psudat <- phyloseq(otu_table(seqtab.nochimhkdat1, taxa_are_rows=FALSE),
                    sample_data(Hiekmet), # originally sample_data
                    tax_table(hiektaxa2))
 ASVrarefied <- rarefy_even_depth(psudat,rngseed = 123456789) #set.seed: 123456789
-                                         
-                                         
-                                         
-seqtabhk <- data.frame(ASVrarefied@otu_table)
-Hiektree <- read_tree("~/Downloads/hieken_05242022/upgmahieken.nwk")
 
-set.seed(12345)
+seqtabhk <- data.frame(ASVrarefied@otu_table)
 ASVtabunifracsHiek <- GUniFrac(seqtabhk, Hiektree, alpha=c(0, 0.5, 1))$unifracs
 D.weightedHiek <- ASVtabunifracsHiek[,,"d_1"]
 D.unweightedHiek <- ASVtabunifracsHiek[,,"d_UW"]
-# for MiRKAT
+# D.BCHiek <- as.matrix(vegdist(ASVtab2Hiek , method="bray"))
 KweightedHiek <- D2K(D.weightedHiek)
 KunweightedHiek <- D2K(D.unweightedHiek)
 
-                                         
-# cmdscale plot - for pcoa of data
 cmdunweunif <- cmdscale(D.unweightedHiek)
 cmdweighunif <- cmdscale(D.weightedHiek)
-
+#View(cmdunweunif)
 cmduni <- data.frame(cmdunweunif)
 cmduniweigh <- data.frame(cmdweighunif)
-
 cmduniweigh$meta <- 0
 cmduni$meta <- 0
 
-# for unweighted unifrac breast vs skin
-for (i in 1:length(HMetaHiek[,1])){
-  for (j in 1:length(rownames(cmduni))) {
-    if (rownames(cmduni)[j] == rownames(HMetaHiek)[i]) {
-      cmduni$meta[j] <- HMetaHiek[i,1]
-    }
-  }
-}
-ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
-  #geom_dotplot(y=cmduni[,2],binwidth = 0.004)
-  geom_point() +
-  stat_ellipse() 
 
-# for weighted unifrac breast vs skin
-for (i in 1:length(HMetaHiek[,1])){
-  for (j in 1:length(rownames(cmduniweigh))) {
-    if (rownames(cmduni)[j] == rownames(HMetaHiek)[i]) {
-      cmduniweigh$meta[j] <- HMetaHiek[i,1]
-    }
-  }
-}
-ggplot(cmduniweigh,aes(x=X1,y=X2,color= meta)) +
-  #geom_dotplot(y=cmduni[,2],binwidth = 0.004)
-  geom_point() +
-  stat_ellipse() 
-
-                                         
-# for unweighted UniFrac BBD vs InvCan
+# for BBD vs InvCan
 for (i in 1:length(Hiekmet[,1])){
   for (j in 1:length(rownames(cmduni))) {
     if (rownames(cmduni)[j] == rownames(Hiekmet)[i]) {
@@ -323,5 +342,3 @@ ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
   stat_ellipse() +
   labs(title = "Unweighted UniFrac")
 
-
-                                         

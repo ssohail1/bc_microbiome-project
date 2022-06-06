@@ -1,3 +1,4 @@
+#### Linda ####
 #### Input ####
 ASVtabprev2 <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabmodifHieken03152022__.txt', header = TRUE)
 ASVtabprev2 <- data.frame(ASVtabprev2)
@@ -247,3 +248,80 @@ mndat1 <- data.frame(mndat1)
 ggplot(mndat1,aes(x=variable,y=value,fill=taxa)) +
   geom_col() +
   facet_wrap(~taxa)
+                                         
+                                         
+#### Unweighted UniFrac benign vs invasive cancer ####
+                                         
+psudat <- phyloseq(otu_table(ASVtabprev2Hiek, taxa_are_rows=FALSE),
+                   sample_data(Hiekmet), # originally sample_data
+                   tax_table(hiektaxa2))
+ASVrarefied <- rarefy_even_depth(psudat,rngseed = 123456789) #set.seed: 123456789
+                                         
+                                         
+                                         
+seqtabhk <- data.frame(ASVrarefied@otu_table)
+Hiektree <- read_tree("~/Downloads/hieken_05242022/upgmahieken.nwk")
+
+set.seed(12345)
+ASVtabunifracsHiek <- GUniFrac(seqtabhk, Hiektree, alpha=c(0, 0.5, 1))$unifracs
+D.weightedHiek <- ASVtabunifracsHiek[,,"d_1"]
+D.unweightedHiek <- ASVtabunifracsHiek[,,"d_UW"]
+# for MiRKAT
+KweightedHiek <- D2K(D.weightedHiek)
+KunweightedHiek <- D2K(D.unweightedHiek)
+
+                                         
+# cmdscale plot - for pcoa of data
+cmdunweunif <- cmdscale(D.unweightedHiek)
+cmdweighunif <- cmdscale(D.weightedHiek)
+
+cmduni <- data.frame(cmdunweunif)
+cmduniweigh <- data.frame(cmdweighunif)
+
+cmduniweigh$meta <- 0
+cmduni$meta <- 0
+
+# for unweighted unifrac breast vs skin
+for (i in 1:length(HMetaHiek[,1])){
+  for (j in 1:length(rownames(cmduni))) {
+    if (rownames(cmduni)[j] == rownames(HMetaHiek)[i]) {
+      cmduni$meta[j] <- HMetaHiek[i,1]
+    }
+  }
+}
+ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
+  #geom_dotplot(y=cmduni[,2],binwidth = 0.004)
+  geom_point() +
+  stat_ellipse() 
+
+# for weighted unifrac breast vs skin
+for (i in 1:length(HMetaHiek[,1])){
+  for (j in 1:length(rownames(cmduniweigh))) {
+    if (rownames(cmduni)[j] == rownames(HMetaHiek)[i]) {
+      cmduniweigh$meta[j] <- HMetaHiek[i,1]
+    }
+  }
+}
+ggplot(cmduniweigh,aes(x=X1,y=X2,color= meta)) +
+  #geom_dotplot(y=cmduni[,2],binwidth = 0.004)
+  geom_point() +
+  stat_ellipse() 
+
+                                         
+# for unweighted UniFrac BBD vs InvCan
+for (i in 1:length(Hiekmet[,1])){
+  for (j in 1:length(rownames(cmduni))) {
+    if (rownames(cmduni)[j] == rownames(Hiekmet)[i]) {
+      print(rownames(cmduni)[j] == rownames(Hiekmet)[i])
+      cmduni$meta[j] <- Hiekmet[i,4]
+    }
+  }
+}
+ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
+  #geom_dotplot(y=cmduni[,2],binwidth = 0.004)
+  geom_point() +
+  stat_ellipse() +
+  labs(title = "Unweighted UniFrac")
+
+
+                                         

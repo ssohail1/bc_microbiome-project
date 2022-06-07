@@ -16,8 +16,8 @@ HMetaHiek_1 <- read.table("~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/H
 Hiekmet$additional <- HMetaHiek_1$V2
 
 # Filter with prevalence = 10% and taxa < 0.2% then square root transform
-ASVtabprev <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabwithprevalencepercentsHieken03152022.txt',header = TRUE)
-ASVtabprev <- data.frame(ASVtabprev)
+#ASVtabprev <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabwithprevalencepercentsHieken03152022.txt',header = TRUE)
+#ASVtabprev <- data.frame(ASVtabprev)
 #ASVtabprev <- t(ASVtabprev)
 hiektaxa <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/taxasilvahieken10082021.txt',header=TRUE)
 hiektaxa <- data.frame(hiektaxa)
@@ -27,6 +27,7 @@ rownames(hiektaxa1) <- hiektaxa[,1]
 library(phyloseq)
 library(GUniFrac)
 library(MicrobiomeStat)
+library(ape)
 #### TSS ####
 ASVcolsums <- colSums(ASVtabprev2Hiek)
 for (i in 1:length(ASVcolsums)){ #length(ASVtabprev2Hiek[1,])
@@ -249,6 +250,7 @@ ggplot(mndat1,aes(x=variable,y=value,fill=taxa)) +
   facet_wrap(~taxa)
 
 #### unweighted UniFrac plot ####
+# for BBD vs InvCan
 ASVtab <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
 ASVtab <- data.frame(ASVtab)
 ASVtab2Hiek <- ASVtab[,-1]
@@ -311,6 +313,7 @@ psudat <- phyloseq(otu_table(seqtab.nochimhkdat1, taxa_are_rows=FALSE),
 ASVrarefied <- rarefy_even_depth(psudat,rngseed = 123456789) #set.seed: 123456789
 
 seqtabhk <- data.frame(ASVrarefied@otu_table)
+Hiektree <- read.tree(file = "~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/upgmahieken.nwk")
 ASVtabunifracsHiek <- GUniFrac(seqtabhk, Hiektree, alpha=c(0, 0.5, 1))$unifracs
 D.weightedHiek <- ASVtabunifracsHiek[,,"d_1"]
 D.unweightedHiek <- ASVtabunifracsHiek[,,"d_UW"]
@@ -326,8 +329,6 @@ cmduniweigh <- data.frame(cmdweighunif)
 cmduniweigh$meta <- 0
 cmduni$meta <- 0
 
-
-# for BBD vs InvCan
 for (i in 1:length(Hiekmet[,1])){
   for (j in 1:length(rownames(cmduni))) {
     if (rownames(cmduni)[j] == rownames(Hiekmet)[i]) {
@@ -341,6 +342,7 @@ ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
   geom_point() +
   stat_ellipse() +
   labs(title = "Unweighted UniFrac")
+
                                          
 
 #### MiRKAT ####

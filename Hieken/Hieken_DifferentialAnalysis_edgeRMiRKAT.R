@@ -1,10 +1,13 @@
 #### Input ####
+
+# ASV table is already filtered using prevalence = 10%
 ASVtabprev2 <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabmodifHieken03152022__.txt', header = TRUE)
 ASVtabprev2 <- data.frame(ASVtabprev2)
 ASVtabprev2Hiek <- ASVtabprev2[,-1]
 rownames(ASVtabprev2Hiek) <- ASVtabprev2[,1]
 ASVtabprev2Hiek <- t(ASVtabprev2Hiek)
 
+# Hieken metadata
 HMeta <- read.table("~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/HMetadata_Tissues.txt")
 HMeta <- data.frame(HMeta)
 HMetaHiek <- HMeta[,-1]
@@ -15,19 +18,18 @@ Hiekmet <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/Hmeta
 HMetaHiek_1 <- read.table("~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/Hmetadata.txt")
 Hiekmet$additional <- HMetaHiek_1$V2
 
-# Filter with prevalence = 10% and taxa < 0.2% then square root transform
-#ASVtabprev <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabwithprevalencepercentsHieken03152022.txt',header = TRUE)
-#ASVtabprev <- data.frame(ASVtabprev)
-#ASVtabprev <- t(ASVtabprev)
+# Hieken taxa
 hiektaxa <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/taxasilvahieken10082021.txt',header=TRUE)
 hiektaxa <- data.frame(hiektaxa)
 hiektaxa1 <- hiektaxa[,-1]
 rownames(hiektaxa1) <- hiektaxa[,1]
 
+# load libraries
 library(phyloseq)
 library(GUniFrac)
 library(MicrobiomeStat)
 library(ape)
+
 #### TSS ####
 ASVcolsums <- colSums(ASVtabprev2Hiek)
 for (i in 1:length(ASVcolsums)){ #length(ASVtabprev2Hiek[1,])
@@ -44,7 +46,7 @@ View(ASVtabprev2Hiek)
 # checking if column sums of ASV table is 1
 ASVcolsumstaxaabund <- colSums(ASVtabprev2Hiek)
 
-# filtering samples that have a max count less than 0.002
+# filtering samples that have a max count less than 0.002 - in this case there were no samples with a max count less than 0.002.
 storeasv <- vector()
 for (i in 1:length(ASVcolsums)){ #length(ASVtabprev2Hiek[1,])
   #sumcol <- sum(ASVtabprev2Hiek[,i])
@@ -66,6 +68,9 @@ ASVtabprev2Hiek1 <- t(ASVtabprev2Hiek)
 # removing buccal and skin swab, skin tissue, atypia, and DCIS samples
 # to compare benign and invasive cancer disease states in breast tissue
 storing <- c()
+
+# first remove those samples from the metadata
+# and store the sample names to storing
 for (i in 1:length(rownames(Hiekmet))) {
   if (Hiekmet[i,1] == "Buccal_Cells") {
     storing <- c(storing, rownames(Hiekmet)[i])
@@ -96,6 +101,7 @@ for (i in 1:length(rownames(Hiekmet))) {
     Hiekmet <- Hiekmet[-i,]
   }
 }
+# loop through the storing list to remove those sample names from the ASV table
 for (i in 1:length(rownames(ASVtabprev2Hiek))) {
   for (j in 1:length(storing)) {
     if (rownames(ASVtabprev2Hiek)[i] == storing[j]){
@@ -104,6 +110,7 @@ for (i in 1:length(rownames(ASVtabprev2Hiek))) {
   }
 }
 ASVtabprev2Hiek1 <- t(ASVtabprev2Hiek)
+
 # to test with SRR files
 linda.obj <- linda(ASVtabprev2Hiek, Hiekmet, formula = '~additional',
                    feature.dat.type = 'proportion',
@@ -113,6 +120,7 @@ linda.obj <- linda(ASVtabprev2Hiek, Hiekmet, formula = '~additional',
 linda.plot(linda.obj, 'tumor',
            alpha = 0.05, lfc.cut = 1,
            legend = TRUE, directory = NULL, width = 11, height = 8)
+
 # to test with ASVs and Taxa
 linda.obj1 <- linda(ASVtabprev2Hiek1, Hiekmet, formula = '~additional',
                     feature.dat.type = 'proportion',
@@ -123,9 +131,6 @@ linda.plot(linda.obj1, 'tumor',
            alpha = 0.05, lfc.cut = 1,
            legend = TRUE, directory = NULL, width = 11, height = 8)
 
-# lindahiek <- read.table("~/Documents/Hieken10082021/Hiekenlindaobjpvalues.txt",header = TRUE)
-# lindahiek <- data.frame(lindahiek)
-# lindaobjupdSRR <- data.frame(linda.obj[["output"]][["tumorMalignant"]]) # p-vals not sig
 
 lindaobjpvaladj <- data.frame(linda.obj1[["output"]][["additionalInvCa"]])
 lindaobjpvaladj1 <- data.frame(lindaobjpvaladj$padj)
@@ -134,7 +139,7 @@ rownames(lindaobjpvaladj1) <- rownames(lindaobjpvaladj)
 count <- 0
 S <- list()
 st <- list()
-#linda.obj$output$tumorMalignant$pvalue
+
 S <- data.frame("asv",rep(0,length(lindaobjpvaladj1$lindaobjpvaladj.padj)))
 S$asv <- rep(0,length(lindaobjpvaladj1$lindaobjpvaladj.padj))
 colnames(S) <- c("asv","taxagenus","extra")
@@ -188,7 +193,6 @@ hiektaxa2 <- as.matrix(hiektaxa1)
 psudat <- phyloseq(otu_table(ASVtabprev2Hiek, taxa_are_rows=FALSE),
                    sample_data(Hiekmet), # originally sample_data
                    tax_table(hiektaxa2))
-#psudat <- prune_samples(sample_names(psudat) != "Mock", psudat)
 dnaudat <- Biostrings::DNAStringSet(taxa_names(psudat))
 names(dnaudat) <- taxa_names(psudat)
 psudat <- merge_phyloseq(psudat, dnaudat)

@@ -47,17 +47,17 @@ View(ASVtabprev2Hiek)
 ASVcolsumstaxaabund <- colSums(ASVtabprev2Hiek)
 
 # filtering samples that have a max count less than 0.002 - in this case there were no samples with a max count less than 0.002.
-storeasv <- vector()
-for (i in 1:length(ASVcolsums)){ #length(ASVtabprev2Hiek[1,])
+#storeasv <- vector()
+#for (i in 1:length(ASVcolsums)){ #length(ASVtabprev2Hiek[1,])
   #sumcol <- sum(ASVtabprev2Hiek[,i])
   #print(sumcol)
   #for (j in 1:length(ASVtabprev2Hiek[,1])) { 
-  if (max(ASVtabprev2Hiek[,i]) <= 0.002) {
+  #if (max(ASVtabprev2Hiek[,i]) <= 0.002) {
     #storeasv <- c(storeasv,colnames(ASVtabprev2Hiek)[i])
     #print(TRUE)
     #print(max(ASVtabprev2Hiek[,i]))
-  }
-}
+  #}
+#}
 
 # sqrt-transform ASV table
 for (i in 1:length(ASVtabprev2Hiek[1,])){
@@ -180,8 +180,6 @@ for (i in 1:length(S$asv)) {
 }
 
 for (j in 1:length(S$asv)) {
-  #for (i in 1:length(lindahiek$pvalue)) {
-  #for (j in 1:length(S$asv)) {
   if (st[j] <= 0.05){
     S$NA.[j] <- st[j]
   }
@@ -223,11 +221,7 @@ rownames(newdatf) <- colnames(propASVdata)
 newdatf <- t(newdatf)
 newdatf1 <- data.frame(newdatf)
 newdatf1$types <- S$`Family-Genus`
-# newdatasvl <- list(newdatasv)
-# newdatasv1 <- as.data.frame(newdatasvl[[1]])
-# newdatasv1$types <- S$`Family-Genus`
-# newdatasv1 <- t(data.frame(newdatasv))
-# newdatasv1$types <- data.frame(samdfhkdat1$hist)
+
 library(ggplot2)
 library(reshape2)
 

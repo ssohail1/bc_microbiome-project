@@ -253,6 +253,7 @@ ggplot(mndat1,aes(x=variable,y=value,fill=taxa)) +
   geom_col() +
   facet_wrap(~taxa)
 
+
 #### unweighted UniFrac plot ####
 # for BBD vs InvCan
 ASVtab <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
@@ -347,14 +348,16 @@ ggplot(cmduni,aes(x=X1,y=X2,color= meta)) +
   stat_ellipse() +
   labs(title = "Unweighted UniFrac")
 
-                                         
+
 
 #### MiRKAT ####
+library(MiRKAT)
 for (i in 1:length(Hiekmet$env_feature)) {
   Hiekmet[i,3] <- as.double(Hiekmet[i,3])
 }
 Hiekdouble <- Hiekmet[,3]
 
+set.seed(12345)
 meerkatsingleHiekunweigUniFrac <- MiRKAT(y= Hiekdouble, Ks = KunweightedHiek, out_type = "D", method = "permutation")
 meerkatsingleHiekweighUniFrac <- MiRKAT(y= Hiekdouble, Ks = KweightedHiek, out_type = "D", method = "permutation")
 meerkatsingleHiekunweigUniFrac

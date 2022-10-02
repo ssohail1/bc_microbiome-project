@@ -189,6 +189,99 @@ ps2udatg <- transform_sample_counts(ps1udatg, function(x) x / sum(x))
 pudatg <- plot_bar(ps2udatg,fill="Genus") + facet_wrap(~Type, scales = "free_x")
 finalplotudatg <- pudatg + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
 
+#### *** To create a proportional abundance genus plot separated by tissue type *** ####
+# Read in the ASV table
+seqtab.nochimudat <- read.table("~/Downloads/Urbaniak_05252022/UrbASVmodifiedSRRs.txt", header = TRUE) # my ASV table has ASVs as first column
+# ASV table should have ASVs in column and sample names that start with SRR in row
+View(seqtab.nochimudat)
+# seqtab.nochimudat modified in the case where first column has the ASVs 
+seqtab.nochimudat1 <- seqtab.nochimudat[,-1]
+rownames(seqtab.nochimudat1) <- seqtab.nochimudat[,1] # making ASVs the row names and the SRR sample names are already the column names
+seqtab.nochimudat1 <- t(data.frame(seqtab.nochimudat1)) # transpose so that the ASVs are the column names and SRR sample names are row names
+View(seqtab.nochimudat1)
+# Read in the taxa table
+taxasilvaudat <- read.table("~/Downloads/Urbaniak_05252022/Urbtaxafile_R.txt",header = TRUE)
+taxasilvaudat <- data.frame(taxasilvaudat)
+taxasilvaudat1 <- as.matrix(taxasilvaudat)
+# Read in the metadata table
+samdfudat <- read.table(file= "~/Downloads/Urbaniak_05252022/urbaniakmeta.txt",header = TRUE)
+samdfudat <- data.frame(samdfudat)
+## Modify metadata table
+for (j in 1:length(rownames(samdfudat))) {
+  if (samdfudat[j,4] == "cancer"){
+    samdfudat[j,4] <- "Malignant"
+  }
+}
+for (j in 1:length(rownames(samdfudat))) {
+  if (samdfudat[j,4] == "benign"){
+    samdfudat[j,4] <- "Benign"
+  }
+}
+
+samdfudat1 <- data.frame(samdfudat)
+View(samdfudat1)
+
+library(phyloseq)
+library(ggplot2)
+samdfudat12 <- samdfudat1[,-1] # first column is SRR sample names
+rownames(samdfudat12) <- samdfudat1[,1] # make the SRR sample names the row names
+View(samdfudat12)
+
+#### Prop Abund ####
+# breast tumor vs healthy
+psurbdat <- phyloseq(otu_table(seqtab.nochimudat1, taxa_are_rows=FALSE),
+                      sample_data(samdfudat12), # originally sample_data
+                      tax_table(taxasilvaudat1))
+dnaurbdat <- Biostrings::DNAStringSet(taxa_names(psurbdat))
+names(dnaurbdat) <- taxa_names(psurbdat)
+psurbdat <- merge_phyloseq(psurbdat, dnaurbdat)
+taxa_names(psurbdat) <- paste0("ASV", seq(ntaxa(psurbdat)))
+psurbdat
+top100urbdat <- names(sort(taxa_sums(psurbdat), decreasing=TRUE)) [1:100] # plotting top 100 seqs
+ps.top100urbdat <- transform_sample_counts(psurbdat, function(OTU) OTU/sum(OTU))
+ps.top100urbdat <- prune_taxa(top100urbdat, ps.top100urbdat)
+# tax_glom to look at Genus level                                
+psurbdatg <- tax_glom(ps.top100urbdat, "Genus")
+ps0urbdatg <- transform_sample_counts(psurbdatg, function(x) x / sum(x))
+ps1urbdatg <- merge_samples(ps0urbdatg, "samp_num") #yields NAs in columns of samdfchdat within ps1urbdatg
+ps2urbdatg <- transform_sample_counts(ps1urbdatg, function(x) x / sum(x))
+# plot the proportional abundance with large text         
+purbdatg <- plot_bar(ps2urbdatg, fill="Genus") 
+purbdatg + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
+
+# benign vs cancer vs healthy facet wrap plot
+psurbdat <- phyloseq(otu_table(seqtab.nochimudat1, taxa_are_rows=FALSE),
+                      sample_data(samdfudat12), # originally sample_data
+                      tax_table(taxasilvaudat1))
+dnaurbdat <- Biostrings::DNAStringSet(taxa_names(psurbdat))
+names(dnaurbdat) <- taxa_names(psurbdat)
+psurbdat <- merge_phyloseq(psurbdat, dnaurbdat)
+taxa_names(psurbdat) <- paste0("ASV", seq(ntaxa(psurbdat)))
+psurbdat
+top100urbdat <- names(sort(taxa_sums(psurbdat), decreasing=TRUE)) [1:100] # plotting top 100 seqs
+ps.top100urbdat <- transform_sample_counts(psurbdat, function(OTU) OTU/sum(OTU))
+ps.top100urbdat <- prune_taxa(top100urbdat, ps.top100urbdat)
+# tax_glom to look at Genus level                         
+psurbdatg <- tax_glom(ps.top100urbdat, "Genus")
+ps0urbdatg <- transform_sample_counts(psurbdatg, function(x) x / sum(x))
+ps1urbdatg <- merge_samples(ps0urbdatg, "samp_num") #yields NAs in columns of samdfchdat within ps1urbdatg
+ps2urbdatg <- transform_sample_counts(ps1urbdatg, function(x) x / sum(x))
+
+# ps2urbdatg sample metadata has NA values for entries in the tissue, samp_type, samp_num, and type columns
+# loop through the ps2urbdatg sample metadata and loop through samdfudat metadata
+# if row name of ps2urbdatg sample metadata (i.e. BTS##) matches row name of samdfudat metadata
+# then add the entry in type column of samdfudat metadata to type column of ps2urbdatg sample metadata
+for (i in 1:length(rownames(ps2urbdatg@sam_data))) {
+  for (j in 1:length(samdfudat1$tissue)) {
+    if (rownames(ps2urbdatg@sam_data)[i] == samdfudat1$samp_num[j]) {
+      ps2urbdatg@sam_data$type[i] <- samdfudat1$type[j]
+    }
+  }
+}
+# facet wrap by type to group and separate samples by cancer, benign, healthy
+purbdatg <- plot_bar(ps2urbdatg, fill="Genus") + facet_wrap(~type, scales = "free_x")
+purbdatg + theme(legend.text = element_text(size = 20), legend.title = element_text(size = 20), axis.title.x = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 15), axis.text.y = element_text(size = 15))
+                                    
 # *** Phylogenetic Tree Code ***
 
 # if (!requireNamespace("BiocManager", quietly = TRUE))

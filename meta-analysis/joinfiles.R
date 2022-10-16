@@ -1,3 +1,61 @@
+# Total Sum Scaling
+
+## Hieken
+ASVtab <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
+ASVtab <- data.frame(ASVtab)
+ASVtab2Hiek <- ASVtab[,-1]
+# make ASVs the rows
+rownames(ASVtab2Hiek) <- ASVtab[,1]
+# transpose to have ASVs in the columns
+ASVtab2Hiek <- t(ASVtab2Hiek)
+seqtab.nochimhkdat12 <- data.frame(ASVtab2Hiek) # original asv table with raw counts
+ASVcolsums <- colSums(seqtab.nochimhkdat12)
+for (i in 1:length(ASVcolsums)){ 
+  for (j in 1:length(seqtab.nochimhkdat12[,1])) { 
+    seqtab.nochimhkdat12[j,i] <- round((seqtab.nochimhkdat12[j,i])/(ASVcolsums[i]),digits=10)
+  }
+}
+write.table(seqtab.nochimhkdat12,file = "~/Downloads/HiekenASV12202021upd_percentnormalupd.txt")
+
+## Chan
+seqtab.nochimcdat1 <- read.table("~/Downloads/Chan_05242022/ChanASV12202021upd_R.txt",header = TRUE)
+seqtab.nochimcdat12 <- data.frame(seqtab.nochimcdat1)
+ASVcolsums <- colSums(seqtab.nochimcdat12)
+for (i in 1:length(ASVcolsums)){ 
+  for (j in 1:length(seqtab.nochimcdat12[,1])) { 
+    seqtab.nochimcdat12[j,i] <- round((seqtab.nochimcdat12[j,i])/(ASVcolsums[i]),digits=10)
+  }
+}
+write.table(seqtab.nochimcdat12, "~/Downloads/Chan_05242022/ChanASV-TSS_upd.txt")
+
+## Urbaniak
+seqtab.nochimudat <- read.table("~/Downloads/Urbaniak_05252022/UrbASVmodifiedSRRs.txt", header = TRUE)
+seqtab.nochimudat1 <- seqtab.nochimudat[,-1]
+rownames(seqtab.nochimudat1) <- seqtab.nochimudat[,1]
+seqtab.nochimudat1 <- t(data.frame(seqtab.nochimudat1))
+seqtab.nochimudat12 <- data.frame(seqtab.nochimudat1)
+ASVcolsums <- colSums(seqtab.nochimudat12)
+for (i in 1:length(ASVcolsums)){ 
+  for (j in 1:length(seqtab.nochimudat12[,1])) { 
+    seqtab.nochimudat12[j,i] <- round((seqtab.nochimudat12[j,i])/(ASVcolsums[i]),digits=10)
+  }
+}
+write.table(seqtab.nochimudat12, "~/Downloads/Urbaniak_05252022/UrbASV-TSS_upd.txt")
+
+# Python script for normalizing ASV tables
+
+## Hieken
+
+
+## Chan
+
+
+## Urbaniak
+
+
+# Joining tables
+
+#### Code ####
 #### Read and format input files ####
 library(dplyr)
 # Urbaniak ASV table

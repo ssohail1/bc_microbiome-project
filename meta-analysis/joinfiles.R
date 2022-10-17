@@ -44,16 +44,56 @@ write.table(seqtab.nochimudat12, "~/Downloads/Urbaniak_05252022/UrbASV-TSS_upd.t
 
 # Python script for normalizing ASV tables
 
-## Hieken
+## Hieken python script
+# python percentile_norm.py -i HiekenASV12202021_percentnormal.txt -case Hiekencases.txt -control Hiekencontrols.txt -o Hieken_percentile_norm-proportional.txt
 
+## Chan python script
+# python percentile_norm.py -i ChanASVTSS_forpercentnormal.txt -case Chancases.txt -control Chancontrols.txt -o Chan_percentile_norm-proportional.txt
 
-## Chan
+## Urbaniak python script
+# python percentile_norm.py -i UrbASVTSS_forpercentnormal.txt -case Urbaniakcases.txt -control Urbaniakcontrols.txt -o Urbaniak_percentile_norm-proportional.txt
 
+### normalized files have the associated taxa of each ASV as column
+hiekpernorm <- read.table("~/Downloads/Hieken_percentile_norm-proportional.txt")
+urbpernorm <- read.table("~/Downloads/Urbaniak_percentile_norm-proportional.txt")
+chanpernorm <- read.table("~/Downloads/Chan_percentile_norm-proportional.txt")
 
-## Urbaniak
+### pre-normalized ASV tables with ASVs as columns
+casv <- read.table("~/Downloads/Chan_05242022/ChanASV-TSS_upd.txt")
+hasv <- read.table(file = "~/Downloads/HiekenASV12202021upd_percentnormalupd.txt")
+uasv <- read.table("~/Downloads/Urbaniak_05252022/UrbASV-TSS_upd.txt")
+colnames(casv)[1]
+colnames(uasv)[1]
+colnames(hasv)[1]
 
+### make column names of the pre-normalized ASV tables, the column names of the normalized ASV tables
+colnames(chanpernorm) <- colnames(casv)
+colnames(urbpernorm) <- colnames(uasv)
+colnames(hiekpernorm) <- colnames(hasv)
+
+### transpose so that ASVs are rows and sample names are columns
+chanpernorm <- t(chanpernorm)
+hiekpernorm <- t(hiekpernorm)
+urbpernorm <- t(urbpernorm)
+
+### edit these in text edit to include the word " ASV " before the first sample name
+### so can join the files in next step
+write.table(chanpernorm,file = "~/Downloads/Chan_05242022/chantsspercnormforR.txt")
+write.table(hiekpernorm,file = "~/Downloads/hieken_05242022/hiekentsspercnormforR.txt")
+write.table(urbpernorm,file = "~/Downloads/Urbaniak_05252022/urbaniaktsspercnormforR.txt")
 
 # Joining tables
+
+## ASV tables
+chanpercnorm <- read.table(file = "~/Downloads/Chan_05242022/chantsspercnormforR.txt", header = TRUE)
+hiekpercnorm <- read.table(file = "~/Downloads/hieken_05242022/hiekentsspercnormforR.txt", header = TRUE)
+urbpercnorm <- read.table(file = "~/Downloads/Urbaniak_05252022/urbaniaktsspercnormforR.txt", header = TRUE)
+
+## TAXONOMY tables
+
+
+## METADATA tables
+
 
 #### Code ####
 #### Read and format input files ####

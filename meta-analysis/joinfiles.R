@@ -58,7 +58,7 @@ hiekpernorm <- read.table("~/Downloads/Hieken_percentile_norm-proportional.txt")
 urbpernorm <- read.table("~/Downloads/Urbaniak_percentile_norm-proportional.txt")
 chanpernorm <- read.table("~/Downloads/Chan_percentile_norm-proportional.txt")
 
-### pre-normalized ASV tables with ASVs as columns
+### Before normalization ASV tables with ASVs as columns
 casv <- read.table("~/Downloads/Chan_05242022/ChanASV-TSS_upd.txt")
 hasv <- read.table(file = "~/Downloads/HiekenASV12202021upd_percentnormalupd.txt")
 uasv <- read.table("~/Downloads/Urbaniak_05252022/UrbASV-TSS_upd.txt")
@@ -88,6 +88,23 @@ write.table(urbpernorm,file = "~/Downloads/Urbaniak_05252022/urbaniaktsspercnorm
 chanpercnorm <- read.table(file = "~/Downloads/Chan_05242022/chantsspercnormforR.txt", header = TRUE)
 hiekpercnorm <- read.table(file = "~/Downloads/hieken_05242022/hiekentsspercnormforR.txt", header = TRUE)
 urbpercnorm <- read.table(file = "~/Downloads/Urbaniak_05252022/urbaniaktsspercnormforR.txt", header = TRUE)
+
+HiekUrbASVcombined <- full_join(hiekpercnorm,urbpercnorm,by="ASV")
+HiekUrbASVcombined <- data.frame(HiekUrbASVcombined)
+HiekUrbChanASVcombined <- full_join(HiekUrbASVcombined,chanpercnorm,by="ASV")
+## Modify & format the ASV tables
+HiekUrbChanASVcombined1 <- HiekUrbChanASVcombined[,-1]
+rownames(HiekUrbChanASVcombined1) <- HiekUrbChanASVcombined[,1]
+HiekUrbChanASVcombined1 <- t(HiekUrbChanASVcombined1)
+## change the NA values to 0
+for (i in 1:length(rownames(HiekUrbChanASVcombined1))){
+  ftasv <- is.na(HiekUrbChanASVcombined1[i,])
+  for (j in 1:length(ftasv)) {
+    if (ftasv[j] == TRUE) {
+      HiekUrbChanASVcombined1[i,j] <- 0
+    }
+  }
+}
 
 ## TAXONOMY tables
 

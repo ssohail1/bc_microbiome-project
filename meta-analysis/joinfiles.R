@@ -106,6 +106,10 @@ for (i in 1:length(rownames(HiekUrbChanASVcombined1))){
   }
 }
 
+## Order the ASV table from least to greatest value
+newdatafr <- HiekUrbChanASVcombined1[,order(colSums(-HiekUrbChanASVcombined1))]
+HiekUrbChanASVcombined1 <- data.frame(newdatafr)
+
 ## TAXONOMY tables
 
 

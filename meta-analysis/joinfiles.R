@@ -1,3 +1,19 @@
+# Load Libraries
+library(dplyr)
+library(phyloseq)
+library(ape)
+library(ggplot2)
+library(vegan)
+library(ecodist)
+library(stats)
+library(plyr)
+library(reshape)
+library(cluster)
+library(compositions)
+library(vegan)
+library(microshades)
+
+
 # Total Sum Scaling
 
 ## Hieken
@@ -111,7 +127,12 @@ newdatafr <- HiekUrbChanASVcombined1[,order(colSums(-HiekUrbChanASVcombined1))]
 HiekUrbChanASVcombined1 <- data.frame(newdatafr)
 
 ## TAXONOMY tables
-
+## Combine the taxa tables
+### the combined taxa file is generated from python script editmetadataASVTaxa.py
+HiekUrbChanTAXAcombined <- read.table("~/Documents/HiekUrbChan_CombinedTaxa_fin.txt",header = TRUE)
+HiekUrbChanTAXAcombined2 <- HiekUrbChanTAXAcombined[,-1]
+rownames(HiekUrbChanTAXAcombined2) <- HiekUrbChanTAXAcombined[,1]
+HiekUrbChanTAXAcombined2 <- as.matrix(HiekUrbChanTAXAcombined2)
 
 ## METADATA tables
 

@@ -358,3 +358,151 @@ meerkatsingleHiekunweigUniFrac
 meerkatsingleHiekweighUniFrac
 
 
+
+####### Heatmap - alpha diversity #######
+library(phyloseq)
+library(reshape2)
+library(ggplot2)
+library(plyr); library(dplyr)
+library(RColorBrewer)
+                                         
+# load ASV table
+ASVtab <- read.table('~/Documents/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
+ASVtab <- read.table('~/Downloads/Hieken10082021/MicrobiomeAnalyst_Inputs/seqtabnochimhieken10082021.txt',header = TRUE)
+ASVtab <- data.frame(ASVtab)
+ASVtab2Hiek <- ASVtab[,-1]
+rownames(ASVtab2Hiek) <- ASVtab[,1]
+ASVtab2Hiek <- t(ASVtab2Hiek)
+seqtab.nochimhkdat1 <- data.frame(ASVtab2Hiek)
+
+# load metadata table
+HMetaHiek1 <- read.table(file="~/Downloads/Hieken10082021/MicrobiomeAnalyst_Inputs/HMetadata_Tissuescopy.txt")
+HMeta <- data.frame(HMetaHiek1)
+HMetaHiek <- HMeta[,-1]
+rownames(HMetaHiek) <- HMeta[,1]
+colnames(HMetaHiek) <- c("tissue","tumor")
+samdfhkdat1 <- data.frame(HMetaHiek)
+
+
+# load taxa table
+hiektaxa <- read.table('~/Downloads/Hieken10082021/MicrobiomeAnalyst_Inputs/taxasilvahieken10082021.txt',header=TRUE)
+hiektaxa <- data.frame(hiektaxa)
+hiektaxa1 <- hiektaxa[,-1]
+rownames(hiektaxa1) <- hiektaxa[,1]
+taxasilvahkdat1 <- as.matrix(hiektaxa1)
+
+# create phyloseq object
+pshktisdat <- phyloseq(otu_table(seqtab.nochimhkdat1, taxa_are_rows=FALSE),
+                       sample_data(samdfhkdat1), # originally sample_data
+                       tax_table(taxasilvahkdat1))
+ASVrarefied <- rarefy_even_depth(pshktisdat,rngseed = 12345) #set.seed: 123456789
+dnahktisdat <- Biostrings::DNAStringSet(taxa_names(ASVrarefied))
+names(dnahktisdat) <- taxa_names(ASVrarefied)
+ASVrarefied <- merge_phyloseq(ASVrarefied, dnahktisdat)
+taxa_names(ASVrarefied) <- paste0("ASV", seq(ntaxa(ASVrarefied)))
+ASVrarefied
+
+# rarefy ASV table
+dataASV <- data.frame(ASVrarefied@otu_table)
+datatasv <- data.frame(t(dataASV))
+colnames(datatasv) <- samdfhkdat1$tissue
+newdatf <- data.frame(matrix(ncol = length(colnames(datatasv)), nrow = length(rownames(datatasv))))
+count1 <- 0
+# add breast tissue samples to newdatf dataframe
+for (i in 1:length(colnames(datatasv))) {
+  if (colnames(datatasv)[i] == "Breast") {
+    newdatf[,i] <- datatasv[,i]
+  }
+  #colnames(datatasv)[i] <- paste(substr(colnames(datatasv)[i],1,1), i, sep='')
+  if (colnames(datatasv)[i] == "Skin_Tissue") {
+    count1 <- count1 + 1
+  }
+}
+# remove NA values
+for (i in 1:length(colnames(newdatf))) {
+  if (is.na(newdatf[1,i]) == TRUE) {
+    newdatf <- newdatf[,-i]
+  }
+}
+# all are breast samples so replace breast with "B"
+for (i in 1:length(colnames(newdatf))) {
+  colnames(newdatf)[i] <- paste("B", i, sep='')
+}
+
+
+# newdatf1 dataframe has the skin_tissue samples
+newdatf1 <- data.frame(matrix(ncol = length(colnames(datatasv)), nrow = length(rownames(datatasv))))
+# count1 <- 0
+for (i in 1:length(colnames(datatasv))) {
+  if (colnames(datatasv)[i] == "Skin_Tissue") {
+    newdatf1[,i] <- datatasv[,i]
+  }
+  #colnames(datatasv)[i] <- paste(substr(colnames(datatasv)[i],1,1), i, sep='')
+  # if (colnames(datatasv)[i] == "Skin_Tissue") {
+  #   count1 <- count1 + 1
+  # }
+}
+# remove NA values
+for (i in 1:length(colnames(newdatf1))) {
+  if (is.na(newdatf1[1,i]) == TRUE) {
+    newdatf1 <- newdatf1[,-i]
+  }
+}
+# all are skin tissue samples so replace skin_tissue with "S"
+for (i in 1:length(colnames(newdatf1))) {
+  colnames(newdatf1)[i] <- paste("S", i, sep='')
+}
+
+
+# add the skin tissue samples ASV table information to newdatf
+## newdatf = all breast samples
+## newdatf1 = all skin tissue samples
+newdatf[,29:47] <- data.frame(matrix(ncol = count1, nrow = length(rownames(datatasv))))
+newdatf[,29:47] <- newdatf1[,1:19]
+
+# add appropriate column names 
+for (i in 29:47) {
+  colnames(newdatf)[i] <- paste("Skin", sep='')
+}
+for (i in 1:28) {
+  colnames(newdatf)[i] <- paste("Breast", sep='')
+}
+# add ASV# rownames
+for (i in 1:length(rownames(newdatf))) {
+  rownames(newdatf)[i] <- paste("ASV",i, sep = '')
+}
+
+# modifying dataframes to plot heatmap through base R and ggplot2
+newdatf1 <- t(data.frame(newdatf))
+meltnewdf <- melt(newdatf1)
+ASVdf <- data.frame(meltnewdf)
+
+dataASV1 <- t(datatasv)
+ASVmelt <- melt(dataASV1)
+ASVdf <- data.frame(ASVmelt)
+
+meltnewdf %>%
+  ggplot(aes(Var1, Var2, fill= value)) + 
+  geom_tile()
+
+ASVmelt %>%
+  ggplot(aes(Var1, Var2, fill= value)) + 
+  geom_tile()
+
+adivdist <- 
+datatmat <- as.matrix(datatasv)
+my_group <- as.numeric(as.factor(substr(rownames(datatmat), 1 , 1)))
+colSide <- brewer.pal(9, "Set1")[my_group]
+colMain <- colorRampPalette(brewer.pal(8, "Blues"))(47)
+colMain1 <- colorRampPalette(brewer.pal(8, "Blues"))(47)
+for (i in 1:length(colnames(datatmat))) {
+  if (colnames(datatmat)[i] == "Breast") {
+    colMain1[i] <- colMain[44]
+  }
+  if (colnames(datatmat)[i] == "Skin_Tissue") {
+    colMain1[i] <- colMain[21]
+  }
+}
+newdat <- as.matrix(newdatf)
+heatmap(data, Colv = NA, Rowv = NA, scale="column" , RowSideColors=colSide, col=colMain   )
+heatmap(x = newdat,ColSideColors = colMain1)
